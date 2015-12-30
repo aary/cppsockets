@@ -49,9 +49,8 @@ template <> void _log_output<true> (const string& output_message) {
             (output_message.back() == '\n' ? "" : "\n");
     __log_mutex.store(false);
 }
-template <> void _log_output<false> (const string& output_message) { 
-    (void) &(output_message); // silence unused variable warning
-}
+template <> void _log_output<false> (__attribute__((unused)) // silence unused 
+        const string& output_message) {}                     // variable warning
 static constexpr void (*log_output) (const string& output_message) = 
     _log_output<log_events>;
 
