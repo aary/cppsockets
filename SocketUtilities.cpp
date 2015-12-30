@@ -232,9 +232,7 @@ void SocketRAII::release() {
 }
 
 SocketRAII::SocketRAII(int sock_fd) : owned_socket(sock_fd) {}
-SocketRAII::~SocketRAII() { 
-    this->release(); 
-}
+SocketRAII::~SocketRAII() { this->release(); }
 SocketRAII::SocketRAII(SocketRAII&& other) {
     this->owned_socket = other.owned_socket;
     other.owned_socket = SocketRAII::null_socket;
