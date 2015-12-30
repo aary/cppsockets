@@ -40,8 +40,8 @@ static ostream* log_stream = &std::cout;
  * compile time when the network log is not required
  */
 static std::atomic<bool> __log_mutex (false);
-template <bool output> void _log_output(string output_message);
-template <> void _log_output<true> (string output_message) {
+template <bool output> void _log_output(const string& output_message);
+template <> void _log_output<true> (const string& output_message) {
 
     // spin and acquire the lock
     while (__log_mutex.exchange(false)) {}
@@ -49,8 +49,10 @@ template <> void _log_output<true> (string output_message) {
             (output_message.back() == '\n' ? "" : "\n");
     __log_mutex.store(false);
 }
-template <> void _log_output<false> (string output_message) {}
-static constexpr void (*log_output) (string output_message) = 
+template <> void _log_output<false> (const string& output_message) { 
+    (void) (output_message); // silence unused variable warning
+}
+static constexpr void (*log_output) (const string& output_message) = 
     _log_output<log_events>;
 
 
@@ -177,7 +179,7 @@ BufferType SocketUtilities::receive (SocketType sock_fd,
 void SocketUtilities::send(SocketType sock_fd, BufferType data_to_send) {
     
     // loop and send data 
-    int bytes_sent = 0;
+    size_t bytes_sent = 0;
     while (bytes_sent < data_to_send.size()) {
         int sent = ::send(sock_fd, data_to_send.data() + bytes_sent, 
                 data_to_send.size() - bytes_sent, MSG_NOSIGNAL);
