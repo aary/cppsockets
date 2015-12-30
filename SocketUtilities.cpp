@@ -136,8 +136,6 @@ SocketType SocketUtilities::create_server_socket(const char* port, int backlog) 
 auto SocketUtilities::recv(SocketType sock_fd, void* buffer, 
         size_t length, int flags) -> decltype (::recv(0,0,0,0)) {
 
-    // Print to the network log
-    log_output(string("Called recv() on socket ") + to_string(sock_fd));
 
     // Make the system call and handle errors
     auto n = ::recv(sock_fd, buffer, length, flags);
@@ -149,9 +147,10 @@ auto SocketUtilities::recv(SocketType sock_fd, void* buffer,
                 string("Error calling recv() : ") + string (strerror(errno)));
     }
 
-    // print to network log again
-    log_output(string("Received data from socket ") + to_string(sock_fd) + 
-            string("\n") + string((char*)buffer, ((char*)buffer) + n));
+    // Print to the network log
+    log_output(string("Called recv() on socket ") + to_string(sock_fd) + 
+            string(" : ") + string("received ") + to_string(n) + 
+            string(" bytes\n") + string((char*)buffer, ((char*)buffer) + n));
 
     return n;
 }
