@@ -1,4 +1,5 @@
 #include "SocketUtilities.h"
+#include <limits>
 #include <unistd.h>
 #include <atomic>
 #include <vector>
@@ -41,6 +42,8 @@ static ostream* log_stream = &std::cout;
 static std::atomic<bool> __log_mutex (false);
 template <bool output> void _log_output(string output_message);
 template <> void _log_output<true> (string output_message) {
+
+    // spin and acquire the lock
     while (__log_mutex.exchange(false)) {}
         *log_stream << "@@@ Network Log @@@  " << output_message << 
             (output_message.back() == '\n' ? "" : "\n");
@@ -219,10 +222,12 @@ SocketType SocketUtilities::accept(SocketType sock_fd,
  *********************** The RAII wrapper for sockets *************************
  ******************************************************************************/
 using SocketRAII = SocketUtilities::SocketRAII;
+const SocketType SocketRAII::null_socket = std::numeric_limits<SocketType>::max();
+
 void SocketRAII::release() {
-    if (this->owned_socket != -1) {
+    if (this->owned_socket != SocketRAII::null_socket) {
         close(this->owned_socket); 
-        this->owned_socket = -1; 
+        this->owned_socket = SocketRAII::null_socket; 
     }
 }
 
@@ -232,7 +237,7 @@ SocketRAII::~SocketRAII() {
 }
 SocketRAII::SocketRAII(SocketRAII&& other) {
     this->owned_socket = other.owned_socket;
-    other.owned_socket = -1;
+    other.owned_socket = SocketRAII::null_socket;
 }
 
 SocketRAII::operator SocketType () { return this->owned_socket; }

@@ -125,7 +125,8 @@ public:
     operator SocketType ();
 
 private:
-    SocketType owned_socket = -1;
+    SocketType owned_socket;
+    static const SocketType null_socket; 
 };
 
 /*
