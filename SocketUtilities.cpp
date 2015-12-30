@@ -50,7 +50,7 @@ template <> void _log_output<true> (const string& output_message) {
     __log_mutex.store(false);
 }
 template <> void _log_output<false> (const string& output_message) { 
-    (void) (output_message); // silence unused variable warning
+    (void) &(output_message); // silence unused variable warning
 }
 static constexpr void (*log_output) (const string& output_message) = 
     _log_output<log_events>;
