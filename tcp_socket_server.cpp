@@ -20,7 +20,7 @@ int main(int argc, char** argv) {
 
     // create socket on which the server will listen
     using SocketRAII = SocketUtilities::SocketRAII;
-    SocketRAII sockfd = SocketUtilities::create_server_socket("8000");
+    SocketRAII sockfd = SocketUtilities::create_server_socket(argv[1]);
 
     // Print serving prompt
     cout << " * Serving on port " << argv[1] << " (Press CTRL+C to quit)" << endl;
