@@ -18,14 +18,6 @@ int main(int argc, char** argv) {
         exit(1);
     }
 
-    // open log file
-    ofstream fout;
-    fout.open("network.log");
-    if (!fout) {
-        cerr << "Could not open output file " << "network.log" << endl;
-        exit(1);
-    }
-
     // create socket on which the server will listen
     using SocketRAII = SocketUtilities::SocketRAII;
     SocketRAII sockfd = SocketUtilities::create_server_socket("8000");
