@@ -5,8 +5,13 @@
  * SocketUtilities.h
  * Written by Aaryaman Sagar 
  *
- * This namespace provides basic socket functionality that aims to avoid having to
- * rewrite annoying interface socket functions over and over again
+ * This class provides basic socket functionality that aims to avoid having to
+ * rewrite annoying interface socket functions over and over again.
+ *
+ * Note: The functions have logging disabled by default.  To enable compile with
+ * the -DSOCKET_LOG_COMMUNICATION flag to g++.  When logging is enabled the
+ * functions are no longer async safe, so be careful when mixing Linux signals
+ * and this interface.
  */
 
 #include <iostream>
@@ -135,4 +140,4 @@ private:
     static constexpr bool log_events = false;
 #endif
 
-#endif
+#endif // __SOCKET_UTILITIES__

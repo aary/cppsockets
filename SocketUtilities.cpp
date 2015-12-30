@@ -32,7 +32,7 @@ using std::to_string;
 /*
  * The standard stream to which logged messages are displayed.
  */
-static ostream& log_stream = std::cout;
+static ostream* log_stream = &std::cout;
 
 /*
  * Defaulted compile time logging utility for this class.  Optimized away at
@@ -42,7 +42,7 @@ static std::atomic<bool> __log_mutex (false);
 template <bool output> void _log_output(string output_message);
 template <> void _log_output<true> (string output_message) {
     while (__log_mutex.exchange(false)) {}
-        cout << "@@@ Network Log @@@ " << output_message << 
+        *log_stream << "@@@ Network Log @@@  " << output_message << 
             (output_message.back() == '\n' ? "" : "\n");
     __log_mutex.store(false);
 }
@@ -54,6 +54,10 @@ static constexpr void (*log_output) (string output_message) =
 /******************************************************************************
  ************************* FUNCTION IMPLEMENTIONS *****************************
  ******************************************************************************/
+void SocketUtilities::set_log_stream(std::ostream& log_stream_in) {
+    log_stream = &log_stream_in;
+}
+
 SocketType SocketUtilities::create_server_socket(const char* port, int backlog) {
 
     SocketType socket_to_return;
