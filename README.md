@@ -51,7 +51,7 @@ int main(int argc, char** argv) {
 ```  
 
 To compile and run it yourself type in  
-`make sampleserver && ./sampleserver 8000`
+`make sampleserver && ./sampleserver 8000`  
 Use curl as a client to this  
 `curl --request GET "http://localhost:8000"`  
 
