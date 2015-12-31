@@ -8,6 +8,11 @@
  * This class provides basic socket functionality that aims to avoid having to
  * rewrite annoying Berkeley TCP stream socket functions over and over again.
  *
+ * The class has been made to resemble the old berkeley sockets interface, i.e.
+ * member functions have been avoided to enable easy compatibility with the old
+ * interface and so that the interface appears familiar for people who are used
+ * to the traditional interface
+ *
  * Note: The functions have logging disabled by default.  To enable compile with
  * the -DSOCKET_LOG_COMMUNICATION flag to g++.  When logging is enabled the
  * functions are no longer async safe, so be careful when mixing Linux signals
@@ -33,19 +38,23 @@ public:
     using BufferType = std::vector<char>;           // a generic buffer type
 
     /*
+     * RAII Wrapper to indicate unique ownership of an open socket file descriptor,
+     * this is a unique ownership class.  It does not maintain any sort of reference
+     * count.  In theory it does have a binary reference count however.  Closes the
+     * socket on destruction.
+     */
+    class SocketRAII;
+
+    /*
      * Standard exception class
      */
     class SocketException;
 
     /*
-     * RAII wrapper for a socket.  The socket is automatically closed on
-     * destruction of this object. 
-     */
-    class SocketRAII;
-
-    /*
      * Sets the default logging output stream for this class.  Thread safe. 
-     * Async unsafe
+     * Async unsafe.  Cannot use this function safely from within signal
+     * handlers.  As a result of every function making calls to log events, this
+     * class should be used with care in an signal handling environment. 
      */
     static void set_log_stream(std::ostream& log_stream_in);
 
@@ -66,9 +75,6 @@ public:
     static SocketType create_client_socket(const char* address, 
                                            const char* port);
 
-    /**************************************************************************
-     *                       SOCKET NETWORK INTERACTION                       *
-     **************************************************************************/
     /*
      * A wrapper around the recv() function that takes care of looping while
      * data has not been received, and exceptional conditions.  
@@ -117,9 +123,6 @@ public:
     static auto accept(SocketType sock_fd, sockaddr* address = nullptr, 
                        socklen_t* address_len = nullptr) 
         -> decltype(::accept(0,0,0));
-    /**************************************************************************
-     *                      /SOCKET NETWORK INTERACTION                       *
-     **************************************************************************/
 
     /*
      * Use these functions to poll() for data on a socket file descriptor in a 
@@ -141,56 +144,6 @@ public:
 
 
 /*
- * RAII Wrapper to indicate ownership of an open socket file descriptor, this is
- * a unique ownership class.  It does not maintain any sort of reference count.
- * In theory it does have a binary reference count however.  Closes the socket
- * on destruction.
- */
-class SocketUtilities::SocketRAII {
-public:
-
-    /*
-     * Release ownership of socket, released explicitly.
-     */
-    void release();
-
-    /*
-     * Constructor (acquire) and destructor (release), move construction transfers
-     * ownership to self and releases the ownership of socket from ther other 
-     * object.
-     */
-    SocketRAII(int sock_fd);
-    ~SocketRAII();
-    SocketRAII(SocketRAII&& other);
-
-    /*
-     * Cannot copy construct from another wrapper.  This is because exclusive
-     * ownership would result in scope contention (which object closes the
-     * socket first) and can lead to several hard to diagnose bugs, including a
-     * possibility of races amongst threads.
-     *
-     * Default construction is incorrect.  Something should be owned.
-     *
-     * Move assignment is incorrect style to initialize an object of this kind
-     * in my opinion.  It implies an automatic release which the programmer may
-     * have not intended to happen.
-     */
-    SocketRAII() = delete;
-    SocketRAII(const SocketRAII&) = delete;
-    SocketRAII& operator=(const SocketRAII&) = delete;
-    SocketRAII& operator=(SocketRAII&&) = delete;
-
-    /*
-     * Convert to the type of the socket implicitly
-     */
-    operator SocketType ();
-
-private:
-    SocketType owned_socket;
-    static const SocketType null_socket; 
-};
-
-/*
  * Define this macro to enable logged output to the log stream set by the user. 
  * The default stream for log messages is stdout.  Be careful with using this
  * utility.  Output logging is not async safe and uses an internal spinlock to
@@ -203,3 +156,9 @@ private:
 #endif
 
 #endif // __SOCKET_UTILITIES__
+
+/*
+ * Include the SocketRAII header for convenience
+ */
+#include "SocketRAII.h"
+
