@@ -1,7 +1,7 @@
 #ifndef __SOCKET_RAII__
 #define __SOCKET_RAII__
 
-#include "SocketUtilities.h"
+#include "SocketUtilities.hpp"
 
 /*
  * RAII Wrapper to indicate unique ownership of an open socket file descriptor,

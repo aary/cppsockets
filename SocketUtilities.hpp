@@ -160,5 +160,5 @@ public:
 /*
  * Include the SocketRAII header for convenience
  */
-#include "SocketRAII.h"
+#include "SocketRAII.hpp"
 

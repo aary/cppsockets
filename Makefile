@@ -1,4 +1,4 @@
-SOURCES = $(wildcard *.cpp) 
+SOURCES = $(wildcard *.cpp src/*.cpp) 
 OBJECTS = $(SOURCES:%.cpp=%.o)
 COMPILER = g++
 FLAGS = -std=c++11 -O3 -Wall -Wvla -Werror -Wextra -pedantic
