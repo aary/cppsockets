@@ -1,4 +1,5 @@
 #include "SocketUtilities.h"
+#include <cassert>
 #include <limits>
 #include <unistd.h>
 #include <atomic>
@@ -6,6 +7,7 @@
 #include <sstream>
 #include <string>
 #include <sys/socket.h>
+#include <unistd.h>
 
 // MSG_NOSIGNAL doesn't exist on Mac OSX
 #if defined(__APPLE__)
@@ -56,7 +58,7 @@ static constexpr void (*log_output) (const string& output_message) =
 
 
 /******************************************************************************
- ************************* FUNCTION IMPLEMENTIONS *****************************
+ *                           FUNCTION IMPLEMENTIONS                           *
  ******************************************************************************/
 void SocketUtilities::set_log_stream(std::ostream& log_stream_in) {
     log_stream = &log_stream_in;
@@ -66,7 +68,8 @@ SocketType SocketUtilities::create_server_socket(const char* port, int backlog) 
 
     SocketType socket_to_return;
 
-    // ****************************** STEP 1 **********************************
+    // ************************************************************************
+    // *                                STEP 1                                *
     // ************************************************************************
     // Create the addrinfo struct to get the information needed to bind
     addrinfo hints, *server_address_information;
@@ -118,15 +121,21 @@ SocketType SocketUtilities::create_server_socket(const char* port, int backlog) 
                 "port specified");
     } }
     // ************************************************************************
-    // ****************************** STEP 1 **********************************
+    // *                               /STEP 1                                *
+    // ************************************************************************
     
 
-    // ****************************** STEP 2 **********************************
+
+    // ************************************************************************
+    // *                               STEP 2                                 *
     // ************************************************************************
     if (listen(socket_to_return, backlog) == -1) {
         perror("listen");
         throw SocketException("error in listen()");
     }
+    // ************************************************************************
+    // *                              /STEP 2                                 *
+    // ************************************************************************
 
     // log output
     log_output(string("Created server socket ") + to_string(socket_to_return));
@@ -134,18 +143,22 @@ SocketType SocketUtilities::create_server_socket(const char* port, int backlog) 
     return socket_to_return;
 }
 
-auto SocketUtilities::recv(SocketType sock_fd, void* buffer, 
-        size_t length, int flags) -> decltype (::recv(0,0,0,0)) {
-
+auto SocketUtilities::recv (SocketType sock_fd, void* buffer, 
+        size_t length, int flags) -> decltype (SocketUtilities::recv(0,0,0,0)) {
 
     // Make the system call and handle errors
     auto n = ::recv(sock_fd, buffer, length, flags);
-    if (n == -1) {
-        throw SocketUtilities::SocketException(
-                string("Error calling recv() : ") + string (strerror(errno)));
-    } else if (!n) {
-        throw SocketUtilities::SocketException(
-                string("Error calling recv() : ") + string (strerror(errno)));
+
+    // Exceptional conditions are not tolerated for stream sockets.  In the case
+    // of a non blocking socket, if there is a potential blocking situation then
+    // the user did not call poll() correctly and did not perform the poll()
+    // operation correctly, either using the normal system call or the wrapper
+    // provided in this module. 
+    if ( (!n) || (n == -1) ) {
+        throw SocketException(string("recv() on socket ") + 
+                to_string(sock_fd) + string(" returned with error ") + 
+                string(strerror(errno)));
+
     }
 
     // Print to the network log
@@ -157,10 +170,10 @@ auto SocketUtilities::recv(SocketType sock_fd, void* buffer,
 }
 
 
-BufferType SocketUtilities::receive (SocketType sock_fd, 
+BufferType SocketUtilities::recv_all (SocketType sock_fd, 
         size_t length, unsigned flags) {
 
-    auto bytes_received = decltype(length)(0);
+    auto bytes_received = decltype(length) {0};
     BufferType buffer (length);
 
     // loop and receive data
@@ -170,56 +183,87 @@ BufferType SocketUtilities::receive (SocketType sock_fd,
                 length - bytes_received, 
                 flags);
         bytes_received += received;
+
+
+        // assert that no more data has been received.  Otherwise this function
+        // can cause undefined behavior by accessing memory that doesn't belong
+        // to it.  Like a segmentation fault.
+        assert(bytes_received <= length);
     }
 
     return buffer;
 }
 
-void SocketUtilities::send(SocketType sock_fd, BufferType data_to_send) {
+auto SocketUtilities::send (SocketType sock_fd, void* buffer, size_t length, 
+        int flags) -> decltype(SocketUtilities::send(0,0,0,0)) {
+
+    auto n = ::send(sock_fd, buffer, length, flags);
+
+    // Handle exceptional conditions, keep in mind that a return value of 0 is
+    // not an exceptional condition.  This is in fact a feature of TCP;  this
+    // may indicate that the other side is not keeping up.  If the other side
+    // has ended the connection then SIGPIPE would be generated if the flags do
+    // not include MSG_NOSIGNAL
+    if (n == -1) {
+        throw SocketException(string("send() on socket ") + 
+                to_string(sock_fd) + string(" returned with error ") + 
+                string(strerror(errno)));
+    }
+    
+    // Print to the network log
+    log_output(string("Called send() on socket ") + to_string(sock_fd) + 
+            string(" : ") + string("sent ") + to_string(n) + 
+            string(" bytes\n") + string((char*)buffer, ((char*)buffer) + n));
+
+    return n;
+}
+
+void SocketUtilities::send_all (SocketType sock_fd, 
+        const BufferType& data_to_send) {
     
     // loop and send data 
-    size_t bytes_sent = 0;
+    auto bytes_sent = decltype(data_to_send.size()) {0};
     while (bytes_sent < data_to_send.size()) {
-        int sent = ::send(sock_fd, data_to_send.data() + bytes_sent, 
+        int sent = SocketUtilities::send(sock_fd, 
+                (void*) (data_to_send.data() + bytes_sent), 
                 data_to_send.size() - bytes_sent, MSG_NOSIGNAL);
-        
-        // handle exceptional condition
-        if (sent == -1) {
-            throw SocketException(string("Error sending data to socket ") + 
-                    to_string(sock_fd));
-        }
-
-        // print to log if logging is turned on
-        log_output(string("Called send() on socket ") + to_string(sock_fd) + 
-                string(" : sent ") + to_string(sent) + string(" bytes\n") + 
-                string(data_to_send.data() + bytes_sent, 
-                    data_to_send.data() + bytes_sent + sent));
-
         bytes_sent += sent;
+
+        // assert that too many bytes have not been sent.  I do not know if this
+        // can happen but just doing it here because it's my responsibility to
+        // keep this code safe.
+        assert(bytes_sent <= data_to_send.size());
     }
 
 }
 
-SocketType SocketUtilities::accept(SocketType sock_fd, 
-        sockaddr* address, socklen_t* address_length) {
+auto SocketUtilities::accept(SocketType sock_fd, sockaddr* address, 
+        socklen_t* address_length) -> decltype(SocketUtilities::accept(0,0,0)) {
 
     auto to_return_socket = ::accept(sock_fd, address, address_length);
     if (to_return_socket == -1) {
-        perror("accept");
-        throw SocketException("Error calling accept()");
+        throw SocketException(string("Error calling accept() on socket ") + 
+                to_string(sock_fd) + string(" : ") + 
+                string(strerror(errno)));
     }
 
-    log_output(string("Accepted new connection on socket ") + 
+    // assert that something horribly wrong didn't happen.  stdout, stdin and
+    // stderr are protected members of the file descriptor family.
+    assert(to_return_socket != STDOUT_FILENO && 
+           to_return_socket != STDIN_FILENO && 
+           to_return_socket != STDERR_FILENO);
+
+    log_output(string("accept()ed new connection on socket ") + 
             to_string(to_return_socket));
     return to_return_socket;
 }
 /******************************************************************************
- ************************* FUNCTION IMPLEMENTIONS *****************************
+ *                          /FUNCTION IMPLEMENTIONS                           *
  ******************************************************************************/
 
 
 /******************************************************************************
- *********************** The RAII wrapper for sockets *************************
+ *                       The RAII wrapper for sockets                         *
  ******************************************************************************/
 using SocketRAII = SocketUtilities::SocketRAII;
 const SocketType SocketRAII::null_socket = std::numeric_limits<SocketType>::max();
@@ -240,7 +284,7 @@ SocketRAII::SocketRAII(SocketRAII&& other) {
 
 SocketRAII::operator SocketType () { return this->owned_socket; }
 /******************************************************************************
- *********************** The RAII wrapper for sockets *************************
+ *                      /The RAII wrapper for sockets                         *
  ******************************************************************************/
 
 

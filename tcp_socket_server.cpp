@@ -34,11 +34,11 @@ int main(int argc, char** argv) {
                                                     (socklen_t*) nullptr); 
 
         // receive data
-        SocketUtilities::recv(new_fd, buffer.data(), buffer.size(), 0);
+        SocketUtilities::recv(new_fd, buffer.data(), buffer.size());
 
         // send data
         std::vector<char> data_to_send(response.begin(), response.end());
-        SocketUtilities::send(new_fd, data_to_send);
+        SocketUtilities::send_all(new_fd, data_to_send);
     }
 
     return 0;
