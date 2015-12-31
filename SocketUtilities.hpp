@@ -1,8 +1,8 @@
-#ifndef __SOCKET_UTILITIES__
-#define __SOCKET_UTILITIES__
+#ifndef __SOCKET_UTILITIES__HPP__
+#define __SOCKET_UTILITIES__HPP__
 
 /*
- * SocketUtilities.h
+ * SocketUtilities.hpp
  * Written by Aaryaman Sagar 
  *
  * This class provides basic socket functionality that aims to avoid having to
@@ -37,6 +37,7 @@ public:
     using FileDescriptorType = SocketType;          // generic file descriptors
     using BufferType = std::vector<char>;           // a generic buffer type
 
+
     /*
      * RAII Wrapper to indicate unique ownership of an open socket file descriptor,
      * this is a unique ownership class.  It does not maintain any sort of reference
@@ -45,10 +46,13 @@ public:
      */
     class SocketRAII;
 
+
     /*
-     * Standard exception class
+     * Standard exception class, all exceptions thrown are of this type.
+     * Inherits from std::exception
      */
     class SocketException;
+
 
     /*
      * Sets the default logging output stream for this class.  Thread safe. 
@@ -58,12 +62,14 @@ public:
      */
     static void set_log_stream(std::ostream& log_stream_in);
 
+
     /*
      * Creates a socket on which a server may listen.  The socket is created in
      * a manner that is completely IP version agnostic and so will work with
      * IPv6 as well as IPv4
      */
     static SocketType create_server_socket(const char* port, int backlog = 10);
+
 
     /*
      * Create a socket though which a client connects to a server on the
@@ -74,6 +80,7 @@ public:
      */
     static SocketType create_client_socket(const char* address, 
                                            const char* port);
+
 
     /*
      * A wrapper around the recv() function that takes care of looping while
@@ -94,6 +101,7 @@ public:
             int flags = 0) -> decltype(::recv(0,0,0,0));
     static BufferType recv_all(SocketType sock_fd, size_t length, 
             unsigned flags = 0);  // utilize move semantics to be efficient
+
 
     /*
      * A wrapper around the send() function that takes care of looping while
@@ -116,13 +124,20 @@ public:
             int flags = 0) -> decltype(::send(0,0,0,0));
     static void send_all(SocketType sock_fd, const BufferType& data_to_send);
 
+
     /*
      * A wrapper function around the accept() network call.  This method adds
-     * error handling on top of the usual accept call
+     * error handling on top of the usual accept call.
+     *
+     * This function returns the same type as does the usual accept call, the
+     * way to store the returned socket in the context of this library would be
+     * to assign it to a SocketRAII object which would close the socket on
+     * destruction. 
      */
     static auto accept(SocketType sock_fd, sockaddr* address = nullptr, 
                        socklen_t* address_len = nullptr) 
         -> decltype(::accept(0,0,0));
+
 
     /*
      * Use these functions to poll() for data on a socket file descriptor in a 
@@ -138,8 +153,8 @@ public:
      * this library they will use the poll() system call instead of the two
      * widely used alternatives - select() and epoll()
      */
-    static bool poll_read(SocketType fd);
-    static bool poll_write(SocketType fd);
+    static bool poll_read(SocketType fd);    // poll to see if data can be read
+    static bool poll_write(SocketType fd);   // poll to see if data can be written
 };
 
 

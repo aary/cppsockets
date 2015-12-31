@@ -1,4 +1,4 @@
-#include "../SocketUtilities.hpp"
+#include "SocketUtilities.hpp"
 #include <cassert>
 #include <limits>
 #include <unistd.h>
@@ -253,7 +253,7 @@ auto SocketUtilities::accept(SocketType sock_fd, sockaddr* address,
            to_return_socket != STDIN_FILENO && 
            to_return_socket != STDERR_FILENO);
 
-    log_output(string("accept()ed new connection on socket ") + 
+    log_output(string("Accepted new connection on socket ") + 
             to_string(to_return_socket));
     return to_return_socket;
 }
