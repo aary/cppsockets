@@ -6,7 +6,7 @@
 #include "SocketUtilities.hpp"
 using namespace std;
 
-string response = 
+const string response = 
 "HTTP/1.1 200 OK\n\n"
 "Hello, World!\n";
 

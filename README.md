@@ -11,7 +11,7 @@ This project aims to provide an object based interface to the traditional socket
 #include "SocketUtilities.hpp"
 using namespace std;
 
-string response =
+const string response =
 "HTTP/1.1 200 OK\n\n"
 "Hello, World!\n";
 
