@@ -34,9 +34,7 @@ int main(int argc, char** argv) {
     while (true) {  // main accept() loop
 
         // block and accept connection
-        SocketRAII new_fd = SocketUtilities::accept(sockfd,
-                                                    (sockaddr *) nullptr,
-                                                    (socklen_t*) nullptr);
+        SocketRAII new_fd = SocketUtilities::accept(sockfd);
 
         // receive data
         SocketUtilities::recv(new_fd, buffer.data(), buffer.size());
@@ -50,10 +48,7 @@ int main(int argc, char** argv) {
 }
 ```  
 
-To compile and run it yourself type in  
-`make sampleserver && ./sampleserver 8000`  
-Use curl as a client to this  
-`curl --request GET "http://localhost:8000"`  
+To compile and run it yourself type in `make sampleserver && ./sampleserver 8000`.  Use curl as a client to this `curl --request GET "http://localhost:8000"`  
 
 ### License 
 Copyright (c) 2015 Aaryaman Sagar

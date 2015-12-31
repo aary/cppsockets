@@ -29,9 +29,7 @@ int main(int argc, char** argv) {
     while (true) {  // main accept() loop
 
         // block and accept connection
-        SocketRAII new_fd = SocketUtilities::accept(sockfd, 
-                                                    (sockaddr *) nullptr, 
-                                                    (socklen_t*) nullptr); 
+        SocketRAII new_fd = SocketUtilities::accept(sockfd);
 
         // receive data
         SocketUtilities::recv(new_fd, buffer.data(), buffer.size());
