@@ -67,9 +67,7 @@ int main(int argc, char** argv) {
     while (true) {  // main accept() loop
 
         // block and accept connection
-        SocketRAII new_fd = SocketUtilities::accept(sockfd,
-                                                    (sockaddr *) nullptr,
-                                                    (socklen_t*) nullptr);
+        SocketRAII new_fd = SocketUtilities::accept(sockfd);
 
         // receive data
         SocketUtilities::recv(new_fd, buffer.data(), buffer.size());
@@ -83,10 +81,7 @@ int main(int argc, char** argv) {
 }
 </code></pre>
 
-<p>To compile and run it yourself type in<br>
-<code>make sampleserver &amp;&amp; ./sampleserver 8000</code><br>
-Use curl as a client to this<br>
-<code>curl --request GET "http://localhost:8000"</code>  </p>
+<p>To compile and run it yourself type in <code>make sampleserver &amp;&amp; ./sampleserver 8000</code>.  Use curl as a client to this <code>curl --request GET "http://localhost:8000"</code>  </p>
 
 <h3>
 <a id="license" class="anchor" href="#license" aria-hidden="true"><span class="octicon octicon-link"></span></a>License</h3>
