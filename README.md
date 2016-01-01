@@ -1,4 +1,4 @@
-### SocketUtilities
+### cppsockets
 This project aims to provide an object based interface to the traditional socket I/O system calls in such a way that is manageable and clean. 
 
 ### Sample server using this library
