@@ -1,4 +1,5 @@
 #include <iostream>
+#include <thread>
 #include <fstream>
 #include <array>
 #include <stdexcept>
@@ -25,18 +26,25 @@ int main(int argc, char** argv) {
     // Print serving prompt
     cout << " * Serving on port " << argv[1] << " (Press CTRL+C to quit)" << endl;
 
-    array<char, 1024> buffer;
     while (true) {  // main accept() loop
 
         // block and accept connection
-        SocketRAII new_fd = SocketUtilities::accept(sockfd);
+        cout << "accepting again" << endl;
+        auto new_fd = SocketUtilities::accept(sockfd);
 
-        // receive data
-        SocketUtilities::recv(new_fd, buffer.data(), buffer.size());
+        // receive data in a seperate thread in a non blocking manner
+        thread th([new_fd]() {
 
-        // send data
-        std::vector<char> data_to_send(response.begin(), response.end());
-        SocketUtilities::send_all(new_fd, data_to_send);
+            SocketRAII auto_close(new_fd);
+
+            array<char, 1024> buffer;
+            SocketUtilities::recv(new_fd, buffer.data(), buffer.size());
+
+            // send data
+            std::vector<char> data_to_send(response.begin(), response.end());
+            SocketUtilities::send_all(new_fd, data_to_send);
+
+        }); th.detach();
     }
 
     return 0;
