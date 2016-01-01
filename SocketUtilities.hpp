@@ -92,8 +92,6 @@ public:
      */
     static auto recv (SocketType sock_fd, void* buffer, size_t length, 
             int flags = 0) -> decltype(::recv(0,0,0,0));
-    static BufferType recv_all(SocketType sock_fd, size_t length, 
-            unsigned flags = 0);  // utilize move semantics to be efficient
 
     /*
      * A wrapper around the send() function that takes care of looping while
@@ -148,8 +146,8 @@ public:
      * NOTE : These functions will fail if the socket is set to blocking.  So
      * remember to set the socket to non blocking first. 
      */
-    static bool poll_read(SocketType sock_fd);    // can data be read
-    static bool poll_write(SocketType sock_fd);   // can data be written
+    static std::vector<SocketType> poll_read(SocketType sock_fd);    
+    static std::vector<SocketType> poll_write(SocketType sock_fd);  
     static void make_non_blocking(SocketType sock_fd);
 
     /*
@@ -164,10 +162,18 @@ public:
 
 
 /*
+ * Use this to protect data races when printing to the same output stream.  This
+ * sockets library uses stdout by default.  To change this call the
+ * set_log_stream() function the first thing when main() starts
+ */
+#include <atomic>
+extern std::atomic<bool> network_output_protect;
+
+/*
  * Define this macro to enable logged output to the log stream set by the user. 
  * The default stream for log messages is stdout.  Be careful with using this
  * utility.  Output logging is not async safe and uses an internal spinlock to
- * prevent thread contention with the standard output stream for logging.
+ * prevent thread contention with the standard output stream for logging. 
  */
 #ifdef SOCKET_LOG_COMMUNICATION
     static constexpr bool log_events = true;

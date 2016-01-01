@@ -41,15 +41,15 @@ static ostream* log_stream = &std::cout;
  * Defaulted compile time logging utility for this class.  Optimized away at
  * compile time when the network log is not required
  */
-static std::atomic<bool> __log_mutex (false);
+std::atomic<bool> network_output_protect (false);
 template <bool output> void _log_output(const string& output_message);
 template <> void _log_output<true> (const string& output_message) {
 
     // spin and acquire the lock
-    while (__log_mutex.exchange(false)) {}
+    while (network_output_protect.exchange(false)) {}
         *log_stream << "@@@ Network Log @@@  " << output_message << 
             (output_message.back() == '\n' ? "" : "\n");
-    __log_mutex.store(false);
+    network_output_protect.store(false);
 }
 template <> void _log_output<false> (__attribute__((unused)) // silence unused 
         const string& output_message) {}                     // variable warning
@@ -167,31 +167,6 @@ auto SocketUtilities::recv (SocketType sock_fd, void* buffer,
             string(" bytes\n") + string((char*)buffer, ((char*)buffer) + n));
 
     return n;
-}
-
-
-BufferType SocketUtilities::recv_all (SocketType sock_fd, 
-        size_t length, unsigned flags) {
-
-    auto bytes_received = decltype(length) {0};
-    BufferType buffer (length);
-
-    // loop and receive data
-    while (bytes_received < length) {
-        int received = SocketUtilities::recv(sock_fd, 
-                (void*) (buffer.data() + bytes_received), 
-                length - bytes_received, 
-                flags);
-        bytes_received += received;
-
-
-        // assert that no more data has been received.  Otherwise this function
-        // can cause undefined behavior by accessing memory that doesn't belong
-        // to it.  Like a segmentation fault.
-        assert(bytes_received <= length);
-    }
-
-    return buffer;
 }
 
 auto SocketUtilities::send (SocketType sock_fd, void* buffer, size_t length, 
