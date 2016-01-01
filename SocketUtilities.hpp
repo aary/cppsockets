@@ -2,21 +2,29 @@
 #define __SOCKET_UTILITIES__HPP__
 
 /*
- * SocketUtilities.hpp
- * Written by Aaryaman Sagar 
+ * SocketUtilities.hpp 
+ * Written by Aaryaman Sagar
  *
  * This class provides basic socket functionality that aims to avoid having to
  * rewrite annoying Berkeley TCP stream socket functions over and over again.
  *
  * The class has been made to resemble the old berkeley sockets interface, i.e.
- * member functions have been avoided to enable easy compatibility with the old
- * interface and so that the interface appears familiar for people who are used
- * to the traditional interface
+ * the class has been designed as a namespace with limited behavior, such as the
+ * having of a default logging stream and its own internal mutexes and spinlocks
+ * to prevent interleaving.
  *
  * Note: The functions have logging disabled by default.  To enable compile with
  * the -DSOCKET_LOG_COMMUNICATION flag to g++.  When logging is enabled the
- * functions are no longer async safe, so be careful when mixing Linux signals
- * and this interface.
+ * functions are no longer async safe.  You have been warned.
+ *
+ * The header is arranged as follows. 
+ *
+ *      1. Types and aliases come first
+ *
+ *      2. Basic socket network functions, such as accept(), recv() and send()
+ *
+ *      3. Other advanced techniques such as polling in a non blocking manner
+ *         with timeouts
  */
 
 #include <iostream>
@@ -30,38 +38,25 @@
 class SocketUtilities {
 public:
 
-    /*
-     * Type Aliases
-     */
     using SocketType = decltype(socket(0,0,0));     // socket file descriptors
     using FileDescriptorType = SocketType;          // generic file descriptors
     using BufferType = std::vector<char>;           // a generic buffer type
-
 
     /*
      * RAII Wrapper to indicate unique ownership of an open socket file descriptor,
      * this is a unique ownership class.  It does not maintain any sort of reference
      * count.  In theory it does have a binary reference count however.  Closes the
-     * socket on destruction.
+     * socket on destruction.  Incomplete type has been defined elsewhere in
+     * SocketRAII.h and implemented in its own implmentation file.
      */
     class SocketRAII;
 
-
     /*
      * Standard exception class, all exceptions thrown are of this type.
-     * Inherits from std::exception
+     * Inherits from std::exception.  This is an incomplete type that is defined
+     * by the implementation.
      */
     class SocketException;
-
-
-    /*
-     * Sets the default logging output stream for this class.  Thread safe. 
-     * Async unsafe.  Cannot use this function safely from within signal
-     * handlers.  As a result of every function making calls to log events, this
-     * class should be used with care in an signal handling environment. 
-     */
-    static void set_log_stream(std::ostream& log_stream_in);
-
 
     /*
      * Creates a socket on which a server may listen.  The socket is created in
@@ -69,7 +64,6 @@ public:
      * IPv6 as well as IPv4
      */
     static SocketType create_server_socket(const char* port, int backlog = 10);
-
 
     /*
      * Create a socket though which a client connects to a server on the
@@ -80,7 +74,6 @@ public:
      */
     static SocketType create_client_socket(const char* address, 
                                            const char* port);
-
 
     /*
      * A wrapper around the recv() function that takes care of looping while
@@ -101,7 +94,6 @@ public:
             int flags = 0) -> decltype(::recv(0,0,0,0));
     static BufferType recv_all(SocketType sock_fd, size_t length, 
             unsigned flags = 0);  // utilize move semantics to be efficient
-
 
     /*
      * A wrapper around the send() function that takes care of looping while
@@ -124,7 +116,6 @@ public:
             int flags = 0) -> decltype(::send(0,0,0,0));
     static void send_all(SocketType sock_fd, const BufferType& data_to_send);
 
-
     /*
      * A wrapper function around the accept() network call.  This method adds
      * error handling on top of the usual accept call.
@@ -138,23 +129,37 @@ public:
                        socklen_t* address_len = nullptr) 
         -> decltype(::accept(0,0,0));
 
-
     /*
      * Use these functions to poll() for data on a socket file descriptor in a 
      * non-blocking manner.  
      *
      * poll_read() will return true if there is data to be read in the socket
-     * pointed to by fd.  This will throw an exception in the case of an error.
+     * pointed to by fd.  This will throw an exception in the case of an error
+     * or a timeout.
      *
      * poll_write will return true if data can be written to the socket pointed
-     * to by fd.  This will throw an exception in the case of an error.
+     * to by fd.  This will throw an exception in the case of an error or a
+     * timeout. 
      *
      * These are intended to be fast and portable so in most implementations of
      * this library they will use the poll() system call instead of the two
      * widely used alternatives - select() and epoll()
+     *
+     * NOTE : These functions will fail if the socket is set to blocking.  So
+     * remember to set the socket to non blocking first. 
      */
-    static bool poll_read(SocketType fd);    // poll to see if data can be read
-    static bool poll_write(SocketType fd);   // poll to see if data can be written
+    static bool poll_read(SocketType sock_fd);    // can data be read
+    static bool poll_write(SocketType sock_fd);   // can data be written
+    static void make_non_blocking(SocketType sock_fd);
+
+    /*
+     * Sets the default logging output stream for this class.  Thread safe. 
+     * Async unsafe.  Cannot use this function safely from within signal
+     * handlers.  As a result of every function making calls to log events, this
+     * class should be used with care in an signal handling environment. 
+     */
+    static void set_log_stream(std::ostream& log_stream_in);
+
 };
 
 

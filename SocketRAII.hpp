@@ -15,7 +15,9 @@ public:
     using SocketType = SocketUtilities::SocketType;
 
     /*
-     * Release ownership of socket, released explicitly.
+     * Release ownership of socket, released explicitly.  Once ownership has
+     * been released there is no potential for a double delete problem as the
+     * pointer to the socket is grounded.
      */
     void release();
 
@@ -52,7 +54,6 @@ public:
 
 private:
     SocketType owned_socket;
-    static const SocketType null_socket; 
 };
 
 #endif
