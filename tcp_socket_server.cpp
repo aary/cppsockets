@@ -29,11 +29,10 @@ int main(int argc, char** argv) {
     while (true) {  // main accept() loop
 
         // block and accept connection
-        cout << "accepting again" << endl;
         auto new_fd = SocketUtilities::accept(sockfd);
 
         // receive data in a seperate thread in a non blocking manner
-        thread th([new_fd]() {
+        std::thread ([](decltype(new_fd) new_fd) {
 
             SocketRAII auto_close(new_fd);
 
@@ -44,7 +43,7 @@ int main(int argc, char** argv) {
             std::vector<char> data_to_send(response.begin(), response.end());
             SocketUtilities::send_all(new_fd, data_to_send);
 
-        }); th.detach();
+        }, new_fd).detach(); 
     }
 
     return 0;
