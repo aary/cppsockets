@@ -37,6 +37,7 @@
 <a id="sample-server-using-this-library" class="anchor" href="#sample-server-using-this-library" aria-hidden="true"><span class="octicon octicon-link"></span></a>Sample server using this library</h3>
 
 <pre><code>#include &lt;iostream&gt;
+#include &lt;thread&gt;
 #include &lt;fstream&gt;
 #include &lt;array&gt;
 #include &lt;stdexcept&gt;
@@ -63,18 +64,24 @@ int main(int argc, char** argv) {
     // Print serving prompt
     cout &lt;&lt; " * Serving on port " &lt;&lt; argv[1] &lt;&lt; " (Press CTRL+C to quit)" &lt;&lt; endl;
 
-    array&lt;char, 1024&gt; buffer;
     while (true) {  // main accept() loop
 
         // block and accept connection
-        SocketRAII new_fd = SocketUtilities::accept(sockfd);
+        auto new_fd = SocketUtilities::accept(sockfd);
 
-        // receive data
-        SocketUtilities::recv(new_fd, buffer.data(), buffer.size());
+        // receive data in a seperate thread in a non blocking manner
+        std::thread ([](decltype(new_fd) new_fd) {
 
-        // send data
-        std::vector&lt;char&gt; data_to_send(response.begin(), response.end());
-        SocketUtilities::send_all(new_fd, data_to_send);
+            SocketRAII auto_close(new_fd);
+
+            array&lt;char, 1024&gt; buffer;
+            SocketUtilities::recv(new_fd, buffer.data(), buffer.size());
+
+            // send data
+            std::vector&lt;char&gt; data_to_send(response.begin(), response.end());
+            SocketUtilities::send_all(new_fd, data_to_send);
+
+        }, new_fd).detach();
     }
 
     return 0;
