@@ -41,12 +41,13 @@ static ostream* log_stream = &std::cout;
  * Defaulted compile time logging utility for this class.  Optimized away at
  * compile time when the network log is not required
  */
+using SocketUtilities::network_output_protect;
 std::atomic<bool> network_output_protect (false);
 template <bool output> void _log_output(const string& output_message);
 template <> void _log_output<true> (const string& output_message) {
 
     // spin and acquire the lock
-    while (network_output_protect.exchange(false)) {}
+    while (network_output_protect.exchange(true)) {}
         *log_stream << "@@@ Network Log @@@  " << output_message << 
             (output_message.back() == '\n' ? "" : "\n");
     network_output_protect.store(false);
@@ -61,7 +62,11 @@ static constexpr void (*log_output) (const string& output_message) =
  *                           FUNCTION IMPLEMENTIONS                           *
  ******************************************************************************/
 void SocketUtilities::set_log_stream(std::ostream& log_stream_in) {
-    log_stream = &log_stream_in;
+
+    // spin and acquire lock
+    while(network_output_protect.exchange(true)) {}
+        log_stream = &log_stream_in;
+    network_output_protect.store(false);
 }
 
 SocketType SocketUtilities::create_server_socket(const char* port, int backlog) {

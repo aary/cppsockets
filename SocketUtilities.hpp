@@ -43,9 +43,12 @@
 namespace SocketUtilities {
 
 
-using SocketType = decltype(socket(0,0,0));     // socket file descriptors
-using FileDescriptorType = SocketType;          // generic file descriptors
-using BufferType = std::vector<char>;           // a generic buffer type
+/* socket file descriptors */
+using SocketType = decltype(socket(0,0,0));
+/* generic file descriptors */
+using FileDescriptorType = SocketType;
+/* a generic buffer type */
+using BufferType = std::vector<char>;
 
 /*
  * Standard exception class, all exceptions thrown are of this type.
@@ -133,10 +136,10 @@ auto accept(SocketType sock_fd, sockaddr* address = nullptr,
  * socket functions will return with an error and errno will be set to EGAIN or
  * EWOULDBLOCK.
  */
-auto make_non_blocking(SocketType sock_fd) -> decltype(::fcntl(0,0,0));
+void make_non_blocking(SocketType sock_fd);
 
 /*
- * Sets the default logging output stream for this class.  Thread safe. 
+ * Sets the default logging output stream for this class.  Thread safe.
  * Async unsafe.  Cannot use this function safely from within signal
  * handlers.  As a result of every function making calls to log events, this
  * class should be used with care in an signal handling environment. 
@@ -165,7 +168,7 @@ extern std::atomic<bool> network_output_protect;
     constexpr bool log_events = false;
 #endif
 
-#endif // __SOCKET_UTILITIES__
+#endif /* __SOCKET_UTILITIES__ */
 
 /*
  * Include the other headers in this library for convenience
