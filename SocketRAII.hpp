@@ -9,6 +9,7 @@
  * count.  In theory it does have a binary reference count however.  Closes the
  * socket on destruction.
  */
+
 class SocketUtilities::SocketRAII {
 public:
 

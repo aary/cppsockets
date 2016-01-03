@@ -128,26 +128,31 @@ public:
         -> decltype(::accept(0,0,0));
 
     /*
-     * Use these functions to poll() for data on a socket file descriptor in a 
-     * non-blocking manner.  
+     * A generic kernel event queue that is meant to be used for polling
+     * purposes on a file desciptor.  The poll() and select() functions are not
+     * included in this class becasue they are not made to be used in
+     * multithreaded situations and do not scale well with increasing traffic. 
+     * Only one kernel queue is meant to be present for one process so this will
+     * be a singleton object.
      *
-     * poll_read() will return true if there is data to be read in the socket
-     * pointed to by fd.  This will throw an exception in the case of an error
-     * or a timeout.
+     * To submit file descriptors to the queue to be watched users must call
+     * declare_interest(). 
      *
-     * poll_write will return true if data can be written to the socket pointed
-     * to by fd.  This will throw an exception in the case of an error or a
-     * timeout. 
+     * Users who want to block and get the list of file descriptors that can be
+     * read must call get_readable_fds().  Similarly get_writeable_fds() will
+     * return a list of file descriptors that can be written to
      *
-     * These are intended to be fast and portable so in most implementations of
-     * this library they will use the poll() system call instead of the two
-     * widely used alternatives - select() and epoll()
+     * For more information look at the header for this class
+     * KernelEventQueue.hpp
+     *
+     * This class is system dependant so it will differ from OS to OS, but in
+     * most cases it will either use epoll() for linux and it will use kqueues
+     * for BSDs like Darwin (and subsequently OSX)
      *
      * NOTE : These functions will fail if the socket is set to blocking.  So
      * remember to set the socket to non blocking first. 
      */
-    static std::vector<SocketType> poll_read(SocketType sock_fd);    
-    static std::vector<SocketType> poll_write(SocketType sock_fd);  
+    class KernelEventQueue;
     static void make_non_blocking(SocketType sock_fd);
 
     /*
