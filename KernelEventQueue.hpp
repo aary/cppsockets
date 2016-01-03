@@ -19,9 +19,6 @@
  * read must call get_readable_fds().  Similarly get_writeable_fds() will
  * return a list of file descriptors that can be written to
  *
- * For more information look at the header for this class
- * KernelEventQueue.hpp
- *
  * This class is system dependant so it will differ from OS to OS, but in
  * most cases it will either use epoll() for linux and it will use kqueues
  * for BSDs like Darwin (and subsequently OSX)
