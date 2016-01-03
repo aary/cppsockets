@@ -3,17 +3,17 @@
 
 #include "SocketUtilities.hpp"
 
+namespace SocketUtilities {
+
+
 /*
  * RAII Wrapper to indicate unique ownership of an open socket file descriptor,
  * this is a unique ownership class.  It does not maintain any sort of reference
  * count.  In theory it does have a binary reference count however.  Closes the
  * socket on destruction.
  */
-
-class SocketUtilities::SocketRAII {
+class SocketRAII {
 public:
-
-    using SocketType = SocketUtilities::SocketType;
 
     /*
      * Release ownership of socket, released explicitly.  Once ownership has
@@ -56,5 +56,7 @@ public:
 private:
     SocketType owned_socket;
 };
+
+}
 
 #endif

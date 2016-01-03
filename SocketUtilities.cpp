@@ -22,9 +22,9 @@ public:
 /*
  * Redefine standard aliases and alias the STL types used
  */
-using SocketType = SocketUtilities::SocketType;
-using SocketException = SocketUtilities::SocketException;
-using BufferType = SocketUtilities::BufferType;
+using SocketUtilities::SocketType;
+using SocketUtilities::SocketException;
+using SocketUtilities::BufferType;
 using std::ostringstream;
 using std::cout;
 using std::endl;

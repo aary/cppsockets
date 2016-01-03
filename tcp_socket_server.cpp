@@ -9,7 +9,7 @@ using namespace std;
 
 const string response = 
 "HTTP/1.1 200 OK\n\n"
-"Hello, World!\n";
+"Hello, World!";
 
 int main(int argc, char** argv) {
     
@@ -20,7 +20,7 @@ int main(int argc, char** argv) {
     }
 
     // create socket on which the server will listen
-    using SocketRAII = SocketUtilities::SocketRAII;
+    using SocketUtilities::SocketRAII;
     SocketRAII sockfd = SocketUtilities::create_server_socket(argv[1]);
 
     // Print serving prompt

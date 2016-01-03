@@ -4,6 +4,9 @@
 #include "SocketUtilities.hpp"
 #include <vector>
 
+namespace SocketUtilities {
+
+
 /*
  * A generic kernel event queue that is meant to be used for polling
  * purposes on a file desciptor.  The poll() and select() functions are not
@@ -27,7 +30,7 @@
  * remember to set the socket to non blocking first. 
  */
 
-class SocketUtilities::KernelEventQueue {
+class KernelEventQueue {
 public:
 
     using FileDescriptorType = SocketUtilities::FileDescriptorType;
@@ -71,5 +74,8 @@ private:
     class Impl;
     Impl* impl;
 };
+
+
+}
 
 #endif

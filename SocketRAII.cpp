@@ -1,29 +1,22 @@
 #include "SocketRAII.hpp"
 #include <unistd.h>
+#include <limits>
 
-using SocketRAII = SocketUtilities::SocketRAII;
-using SocketType = SocketRAII::SocketType;
+using SocketUtilities::SocketType;
+static const SocketType null_socket = std::numeric_limits<SocketType>::max();
 
-/******************************************************************************
- *                       The RAII wrapper for sockets                         *
- ******************************************************************************/
-const SocketType null_socket = std::numeric_limits<SocketType>::max();
-
-void SocketRAII::release() {
+void SocketUtilities::SocketRAII::release() {
     if (this->owned_socket != null_socket) {
         close(this->owned_socket); 
         this->owned_socket = null_socket; 
     }
 }
 
-SocketRAII::SocketRAII(int sock_fd) : owned_socket(sock_fd) {}
-SocketRAII::~SocketRAII() { this->release(); }
-SocketRAII::SocketRAII(SocketRAII&& other) {
+SocketUtilities::SocketRAII::SocketRAII(int sock_fd) : owned_socket(sock_fd) {}
+SocketUtilities::SocketRAII::~SocketRAII() { this->release(); }
+SocketUtilities::SocketRAII::SocketRAII(SocketRAII&& other) {
     this->owned_socket = other.owned_socket;
     other.owned_socket = null_socket;
 }
 
-SocketRAII::operator SocketType () { return this->owned_socket; }
-/******************************************************************************
- *                      /The RAII wrapper for sockets                         *
- ******************************************************************************/
+SocketUtilities::SocketRAII::operator SocketType () { return this->owned_socket; }
