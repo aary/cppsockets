@@ -1,5 +1,5 @@
-#ifndef __SOCKET_RAII__hpp__
-#define __SOCKET_RAII__hpp__
+#ifndef __CPP_SOCKETS_SOCKET_RAII__HPP__
+#define __CPP_SOCKETS_SOCKET_RAII__HPP__
 
 #include "SocketUtilities.hpp"
 

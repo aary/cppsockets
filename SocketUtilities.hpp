@@ -1,5 +1,5 @@
-#ifndef __SOCKET_UTILITIES__HPP__
-#define __SOCKET_UTILITIES__HPP__
+#ifndef __CPP_SOCKETS_SOCKET_UTILITIES__HPP__
+#define __CPP_SOCKETS_SOCKET_UTILITIES__HPP__
 
 /*
  * SocketUtilities.hpp 
@@ -35,6 +35,7 @@
 #include <netdb.h>
 #include <arpa/inet.h>
 #include <sys/fcntl.h>
+#include <atomic>
 
 /*
  * Main namespace.  Every utility in this library is within this namespace.  All
@@ -151,7 +152,6 @@ void set_log_stream(std::ostream& log_stream_in);
  * sockets library uses stdout by default.  To change this call the
  * set_log_stream() function the first thing when main() starts
  */
-#include <atomic>
 extern std::atomic<bool> network_output_protect;
 
 }

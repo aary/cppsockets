@@ -8,6 +8,8 @@
 #include <string>
 #include <sys/socket.h>
 #include <unistd.h>
+#include <cstring>
+#include <stdexcept>
 
 // MSG_NOSIGNAL doesn't exist on Mac OSX
 #if defined(__APPLE__)
@@ -27,6 +29,7 @@ using SocketUtilities::SocketException;
 using SocketUtilities::BufferType;
 using std::ostringstream;
 using std::cout;
+using std::cerr;
 using std::endl;
 using std::ostream;
 using std::string;
@@ -96,25 +99,36 @@ SocketType SocketUtilities::create_server_socket(const char* port, int backlog) 
     { addrinfo* i;
     for (i = server_address_information; i; i = i->ai_next) {
 
+        // ********************************************************************
+        // *                            STEP 2                                *
+        // ********************************************************************
         // continue if this fails
         if ((socket_to_return = socket(i->ai_family, i->ai_socktype,
                 i->ai_protocol)) == -1) {
-            perror("server: socket");
+            cerr << "Error creating server socket " << strerror(errno) << endl;
             continue;
         }
 
+        // ********************************************************************
+        // *                            STEP 3                                *
+        // ********************************************************************
         // exit if setsockopt fails
         int yes = 1;
         if (setsockopt(socket_to_return, SOL_SOCKET, SO_REUSEADDR, &yes,
                 sizeof(int)) == -1) {
-            perror("setsockopt");
+            cerr << "Error calling setsockopt on server socket " 
+                << strerror(errno) << endl;
             throw SocketException("Error in setsockopt");
         }
 
+        // ********************************************************************
+        // *                            STEP 4                                *
+        // ********************************************************************
         // continue trying if this fails
         if (::bind(socket_to_return, i->ai_addr, i->ai_addrlen) == -1) {
             close(socket_to_return);
-            perror("server: bind");
+            cerr << "Error calling bind on server socket " << strerror(errno) 
+                << endl;
             continue;
         }
 
@@ -125,28 +139,87 @@ SocketType SocketUtilities::create_server_socket(const char* port, int backlog) 
         throw SocketException("Failed to bind to this machine's IP and "
                 "port specified");
     } }
-    // ************************************************************************
-    // *                               /STEP 1                                *
-    // ************************************************************************
     
 
 
     // ************************************************************************
-    // *                               STEP 2                                 *
+    // *                               STEP 5                                 *
     // ************************************************************************
     if (listen(socket_to_return, backlog) == -1) {
         perror("listen");
         throw SocketException("error in listen()");
     }
-    // ************************************************************************
-    // *                              /STEP 2                                 *
-    // ************************************************************************
 
     // log output
     log_output(string("Created server socket ") + to_string(socket_to_return));
 
     return socket_to_return;
 }
+
+SocketType SocketUtilities::create_client_socket(const char* address, 
+        const char* port) {
+    
+    SocketType socket_to_return;
+
+    // ************************************************************************
+    // *                                STEP 1                                *
+    // ************************************************************************
+    // Create the addrinfo struct to get the information needed to connect to
+    // the remote host
+    addrinfo hints, *server_address_information;
+    memset(&hints, 0, sizeof(hints));
+    hints.ai_family = AF_UNSPEC;        // ipv4 or ipv6
+    hints.ai_socktype = SOCK_STREAM;    // TCP socket
+
+    // make call to getaddrinfo
+    { int return_value;
+    if ((return_value = getaddrinfo(address, port, &hints, 
+                    &server_address_information)) != 0) {
+
+        throw SocketException(string("getaddrinfo: ") + 
+                string(gai_strerror(return_value)));
+    } } // close scope for variable not needed
+
+    { addrinfo* i = nullptr;
+    for (i = server_address_information; i; i = i->ai_next) {
+        
+        // ********************************************************************
+        // *                            STEP 2                                *
+        // ********************************************************************
+        // attempt to create a socket with the address info structure returned
+        // by the getaddrinfo call
+        if ((socket_to_return = socket(i->ai_family, i->ai_socktype, 
+                    i->ai_protocol)) == -1)  {
+            cerr << "Error on creating client socket " << strerror(errno) << endl;
+            continue;
+        }
+
+        // ********************************************************************
+        // *                            STEP 3                                *
+        // ********************************************************************
+        // attempt to connect to the remote server
+        if (connect(socket_to_return, i->ai_addr, i->ai_addrlen) == -1) {
+            close(socket_to_return);
+            cerr << "Error connecting to remote server " << strerror(errno) 
+                << endl;
+            continue;
+        }
+
+        break;
+    }
+
+    if (!i) {
+        throw SocketException("Failed to connect to remote server");
+
+    } } // close scope for variable not needed 
+
+    // all done with this structure
+    freeaddrinfo(server_address_information); 
+
+    // return the socket
+    return socket_to_return;
+}
+    
 
 auto SocketUtilities::recv (SocketType sock_fd, void* buffer, 
         size_t length, int flags) -> decltype (SocketUtilities::recv(0,0,0,0)) {

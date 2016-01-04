@@ -29,15 +29,17 @@ namespace SocketUtilities {
  * NOTE : These functions will fail if the socket is set to blocking.  So
  * remember to set the socket to non blocking first. 
  */
-
 class KernelEventQueue {
 public:
 
+
+    /* Alias the file descriptor type in the namespace for this library */
     using FileDescriptorType = SocketUtilities::FileDescriptorType;
 
     /*
      * Returns a reference to the singleton kernel event queue.  This method is
-     * threadsafe.
+     * threadsafe.  So there will be no data races when multiple threads try and
+     * get the same kernel queue
      */
     static KernelEventQueue& get_kernel_event_queue();
 
@@ -45,7 +47,7 @@ public:
      * Users may call this function to declare interest in a given file
      * descriptor.  Thread safe with respect to the internals of the queue but
      * may result in repeated additions when used concurrently without
-     * synchronization
+     * synchronization. 
      */
     void declare_interest(FileDescriptorType);
 
@@ -60,10 +62,11 @@ public:
      * This functions is blocks to return a list of file descriptors that are
      * ready for reading or writing.  The timeout parameter will contain the
      * number of milliseconds before a timeout should occur.  And on timeout the
-     * function will return an empty vector.
+     * function will return an empty vector.  If one thread is already waiting
+     * on either one of these functions then any other thread calling these will
+     * receive an exception from this library.
      */
-    std::vector<FileDescriptorType> get_readable_fds();
-    std::vector<FileDescriptorType> get_writeable_fds();
+    std::vector<FileDescriptorType> get_active_descriptors();
 
 private:
 
@@ -72,7 +75,7 @@ private:
      * implementation file for this class.
      */
     class Impl;
-    Impl* impl;
+    Impl* impl_ptr;
 };
 
 
