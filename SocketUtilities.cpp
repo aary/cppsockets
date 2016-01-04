@@ -45,7 +45,7 @@ static ostream* log_stream = &std::cout;
  * compile time when the network log is not required
  */
 using SocketUtilities::network_output_protect;
-std::atomic<bool> network_output_protect (false);
+std::atomic<bool> SocketUtilities::network_output_protect (false);
 template <bool output> void _log_output(const string& output_message);
 template <> void _log_output<true> (const string& output_message) {
 
