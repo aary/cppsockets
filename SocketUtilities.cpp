@@ -91,8 +91,8 @@ SocketType SocketUtilities::create_server_socket(const char* port, int backlog) 
     int return_value;
     if ((return_value = 
           getaddrinfo(nullptr, port, &hints, &server_address_information)) != 0) {
-        throw SocketException( (ostringstream() << "getaddrinfo: " << 
-                    gai_strerror(return_value)).str() );
+        throw SocketException(string("getaddrinfo: ") + 
+                string(gai_strerror(return_value)));
     }
 
     // loop through the results from getaddrinfo
