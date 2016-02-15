@@ -51,14 +51,14 @@ template <> void _log_output<true> (const string& output_message) {
 
     // spin and acquire the lock
     while (network_output_protect.exchange(true)) {}
-        *log_stream << "@@@ Network Log @@@  " << output_message << 
+        (*log_stream) << "@@@ Network Log @@@  " << output_message << 
             (output_message.back() == '\n' ? "" : "\n");
     network_output_protect.store(false);
 }
 template <> void _log_output<false> (__attribute__((unused)) // silence unused 
         const string& output_message) {}                     // variable warning
 static constexpr void (*log_output) (const string& output_message) = 
-    _log_output<log_events>;
+    _log_output<SocketUtilities::log_events>;
 
 
 /******************************************************************************
