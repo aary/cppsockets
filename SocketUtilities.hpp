@@ -60,7 +60,8 @@ class SocketException;
 
 /*
  * Forward declarations of other classes in this library that have public
- * interfaces
+ * interfaces.  Consult respective header (.hpp) files for documentation on each
+ * of these.
  */
 class SocketRAII;
 class KernelEventQueue;
@@ -75,26 +76,29 @@ SocketType create_server_socket(const char* port, int backlog = 10);
 /*
  * Create a socket though which a client connects to a server on the
  * network. This like the server equivalent of the same function is also IP
- * version agnostic.  getaddrinfo() is called and then the return ed lined
- * listis iterated over to find the address values that can be connect()ed
- * to
+ * version agnostic.  
+ *
+ * getaddrinfo() is called and then the returned lined listis iterated over to
+ * find the address values that can be connect()ed to
  */
 SocketType create_client_socket(const char* address, const char* port);
 
 /*
- * A wrapper around the recv() function that takes care of looping while
- * data has not been received, and exceptional conditions.  
+ * A wrapper around the recv() function that takes care of looping while data
+ * has not been received, and exceptional conditions.
  *
  * Exceptional conditions are not tolerated while calling recv() for stream
- * sockets.  In the case of a non blocking socket, if there is a potential
- * blocking situation then the user did not call poll() correctly and did
- * not perform the poll() operation correctly, either using the normal
- * system call or the wrapper provided in this module.
+ * sockets.  In the case of a non blocking socket, the callee needs to poll the
+ * kernel queue to see if the socket has data available and then read data from
+ * the socket. 
  *
- * Use the recv() version with the same intent as ::recv() 
- * 
- * Use recv_all to receive the amount of data that was specified.  This
- * blocks while all the data that has been requested has not been received.
+ * Use the recv() version with the same intent as ::recv() without handling any
+ * errors and trusting that a nasty exception will be thrown if there is an
+ * error. 
+ *
+ * If a non blocking file descriptor is used then it should be polled because
+ * caling the recv() call on it.  This is hte general pattern followed in this
+ * project and I believe it to be correct. 
  */
 auto recv (SocketType sock_fd, void* buffer, size_t length, 
         int flags = 0) -> decltype(::recv(0,0,0,0));
@@ -154,8 +158,6 @@ void set_log_stream(std::ostream& log_stream_in);
  */
 extern std::atomic<bool> network_output_protect;
 
-}
-
 /*
  * Define this macro to enable logged output to the log stream set by the user. 
  * The default stream for log messages is stdout.  Be careful with using this
@@ -167,6 +169,8 @@ extern std::atomic<bool> network_output_protect;
 #else
     constexpr bool log_events = false;
 #endif
+
+}
 
 #endif /* __SOCKET_UTILITIES__ */
 

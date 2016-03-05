@@ -3,7 +3,7 @@ SOURCES := $(filter-out tcp_socket_client.cpp, $(SOURCES))
 SOURCES := $(filter-out tcp_socket_server.cpp, $(SOURCES))
 OBJECTS = $(SOURCES:%.cpp=%.o)
 COMPILER = g++
-FLAGS = -std=c++11 -O3 -Wall -Wvla -Werror -Wextra -pedantic -DSOCKET_LOG_COMMUNICATION
+FLAGS = -std=c++14 -O3 -Wall -Wvla -Werror -Wextra -pedantic -DSOCKET_LOG_COMMUNICATION
 
 all: clean $(OBJECTS)
 

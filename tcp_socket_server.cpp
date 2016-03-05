@@ -31,7 +31,7 @@ int main(int argc, char** argv) {
         // block and accept connection
         auto new_fd = SocketUtilities::accept(sockfd);
 
-        // receive data in a seperate thread in a non blocking manner
+        // receive data in a non blocking manner
         std::thread ([](decltype(new_fd) new_fd) {
 
             SocketRAII auto_close(new_fd);

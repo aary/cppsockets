@@ -10,8 +10,8 @@ const string request = "GET / HTTP/1.1\n"
 "User-Agent: curl/7.43.0\n"
 "Accept: */*\n\n";
 
-int main(int argc, char *argv[])
-{
+int main(int argc, char *argv[]) {
+
     if (argc != 3) {
         cerr << "Usage " << argv[0] << " <remote_host> <port>" << endl;
         exit(1);
@@ -22,7 +22,7 @@ int main(int argc, char *argv[])
         SocketUtilities::create_client_socket(argv[1], argv[2]);
     
     // send request
-    std::vector<char> data_to_send (request.begin(), request.end());
+    std::vector<char> data_to_send {request.begin(), request.end()};
     SocketUtilities::send_all(client_socket, data_to_send);
 
     // receive response, this will print the received string to stdout if

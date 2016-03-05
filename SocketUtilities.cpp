@@ -231,7 +231,13 @@ auto SocketUtilities::recv (SocketType sock_fd, void* buffer,
     // of a non blocking socket, if there is a potential blocking situation then
     // the user did not call poll() correctly and did not perform the poll()
     // operation correctly, either using the normal system call or the wrapper
-    // provided in this module. 
+    // provided in this module.  
+    //
+    // If a threadsafe genralized version of this
+    // call is used either in the form of kqueues or epoll then the user
+    // should poll the socket file descriptor such that the recv function is
+    // not called on a socket that is non blocking when there isnt any data in
+    // the socket to read from.  
     if ( (!n) || (n == -1) ) {
         throw SocketException(string("recv() on socket ") + 
                 to_string(sock_fd) + string(" returned with error ") + 
