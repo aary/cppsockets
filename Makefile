@@ -12,11 +12,18 @@ all: clean $(OBJECTS)
 %.o:
 	$(COMPILER) $(FLAGS) -c $*.cpp
 
+install: SocketRAII.cpp SocketUtilities.cpp
+	$(COMPILER) $(FLAGS) SocketRAII.cpp -c
+	$(COMPILER) $(FLAGS) SocketUtilities.cpp -c
+	ar rcs cppsockets.a SocketRAII.o SocketUtilities.o
+	rm SocketRAII.o SocketUtilities.o
+
 clean:
 	rm -f a.out
 	rm -f *.o
 	rm -f sampleserver
 	rm -f sampleclient
+	rm -f cppsockets.a
 
 debug: FLAGS += -g3 -DDEBUG
 debug: $(OBJECTS)
@@ -30,7 +37,7 @@ tcp_socket_server.o: tcp_socket_server.cpp
 
 # Build sample server and client
 sampleserver: $(OBJECTS) tcp_socket_server.o
-	$(COMPILER) $(FLAGS) $(OBJECTS) tcp_socket_server.o -o sampleserver
+	$(COMPILER) $(FLAGS) $(OBJECTS) tcp_socket_server.o -o $@
 
 sampleclient: $(OBJECTS) tcp_socket_client.o
-	$(COMPILER) $(FLAGS) $(OBJECTS) tcp_socket_client.o -o sampleclient
+	$(COMPILER) $(FLAGS) $(OBJECTS) tcp_socket_client.o -o $@
