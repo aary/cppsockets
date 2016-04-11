@@ -87,18 +87,7 @@ SocketType create_client_socket(const char* address, const char* port);
  * A wrapper around the recv() function that takes care of looping while data
  * has not been received, and exceptional conditions.
  *
- * Exceptional conditions are not tolerated while calling recv() for stream
- * sockets.  In the case of a non blocking socket, the callee needs to poll the
- * kernel queue to see if the socket has data available and then read data from
- * the socket. 
- *
- * Use the recv() version with the same intent as ::recv() without handling any
- * errors and trusting that a nasty exception will be thrown if there is an
- * error. 
- *
- * If a non blocking file descriptor is used then it should be polled because
- * caling the recv() call on it.  This is hte general pattern followed in this
- * project and I believe it to be correct. 
+ * Use the recv() version with the same intent as ::recv() 
  */
 auto recv (SocketType sock_fd, void* buffer, size_t length, 
         int flags = 0) -> decltype(::recv(0,0,0,0));

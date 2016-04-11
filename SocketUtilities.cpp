@@ -238,7 +238,7 @@ auto SocketUtilities::recv (SocketType sock_fd, void* buffer,
     // should poll the socket file descriptor such that the recv function is
     // not called on a socket that is non blocking when there isnt any data in
     // the socket to read from.  
-    if ( (!n) || (n == -1) ) {
+    if (n == -1) {
         throw SocketException(string("recv() on socket ") + 
                 to_string(sock_fd) + string(" returned with error ") + 
                 string(strerror(errno)));
@@ -289,8 +289,7 @@ void SocketUtilities::send_all (SocketType sock_fd,
         bytes_sent += sent;
 
         // assert that too many bytes have not been sent.  I do not know if this
-        // can happen but just doing it here because it's my responsibility to
-        // keep this code safe.
+        // can happen but just doing it here because 
         assert(bytes_sent <= data_to_send.size());
     }
 
