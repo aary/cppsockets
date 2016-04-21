@@ -36,7 +36,8 @@ socket I/O system calls in such a way that is manageable and clean.
         cout << " * Serving on port " << argv[1] << " (Press CTRL+C to quit)" 
             << endl;
     
-        while (true) {  // main accept() loop
+        // main accept() loop
+        while (true) {  
     
             // block and accept connection
             auto new_fd = SocketUtilities::accept(sockfd);
