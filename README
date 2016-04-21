@@ -33,7 +33,8 @@ socket I/O system calls in such a way that is manageable and clean.
         SocketRAII sockfd = SocketUtilities::create_server_socket(argv[1]);
     
         // Print serving prompt
-        cout << " * Serving on port " << argv[1] << " (Press CTRL+C to quit)" << endl;
+        cout << " * Serving on port " << argv[1] << " (Press CTRL+C to quit)" 
+            << endl;
     
         while (true) {  // main accept() loop
     
