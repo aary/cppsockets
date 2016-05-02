@@ -80,11 +80,11 @@ library.  Consider making a link to this library with the `-I` flag to `g++` or
 ```
 cd cppsockets
 make install
-mv cppsockets.a ../ myproject
+mv cppsockets.a ../myproject
 cd ../myproject
 g++ -std=c++14 -I ../cppsockets my_network_program.cpp cppsockets.a
 ```
-With `my_network_program.cpp` including the headers for this library like so
+With `my\_network\_program.cpp` including the headers for this library like so
 ```C++
 #include "cppsockets/SocketUtilities.hpp"
 ```
