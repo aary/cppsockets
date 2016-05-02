@@ -10,23 +10,22 @@
 #include <unistd.h>
 #include <cstring>
 #include <stdexcept>
+#include <limits>
 
 // MSG_NOSIGNAL doesn't exist on Mac OSX
 #if defined(__APPLE__)
     #define MSG_NOSIGNAL SO_NOSIGPIPE
 #endif
 
+/* The default exception class, nothing more than a simple runtime_error */
 class SocketUtilities::SocketException : public std::runtime_error {
 public:
     using std::runtime_error::runtime_error;
 };
     
-/*
- * Redefine standard aliases and alias the STL types used
- */
+/* Redefine standard aliases and alias the STL types used */
 using SocketUtilities::SocketType;
 using SocketUtilities::SocketException;
-using SocketUtilities::BufferType;
 using std::ostringstream;
 using std::cout;
 using std::cerr;
@@ -34,20 +33,25 @@ using std::endl;
 using std::ostream;
 using std::string;
 using std::to_string;
+using std::vector;
+using namespace std::literals::string_literals; /* for operator "" */
 
-/*
- * The standard stream to which logged messages are displayed.
- */
+/* The standard stream to which logged messages are displayed. */
 static ostream* log_stream = &std::cout;
 
-/*
- * Defaulted compile time logging utility for this class.  Optimized away at
- * compile time when the network log is not required
- */
+/* define the global network_output_protect variable */
+namespace SocketUtilities { 
+    std::atomic<bool> network_output_protect (false); 
+}
 using SocketUtilities::network_output_protect;
-std::atomic<bool> SocketUtilities::network_output_protect (false);
+
+/*
+ * Logging utility for this class.  Optimized away at compile time when the
+ * network log is not required.  One can enable log messages by defining the
+ * macro SOCKET_LOG_COMMUNICATION when building.
+ */
 template <bool output> void _log_output(const string& output_message);
-template <> void _log_output<true> (const string& output_message) {
+template <> void _log_output<true>(const string& output_message) {
 
     // spin and acquire the lock
     while (network_output_protect.exchange(true)) {}
@@ -72,7 +76,8 @@ void SocketUtilities::set_log_stream(std::ostream& log_stream_in) {
     network_output_protect.store(false);
 }
 
-SocketType SocketUtilities::create_server_socket(const char* port, int backlog) {
+SocketType SocketUtilities::create_server_socket(const char* port, 
+        int backlog) {
 
     SocketType socket_to_return;
 
@@ -91,12 +96,12 @@ SocketType SocketUtilities::create_server_socket(const char* port, int backlog) 
     int return_value;
     if ((return_value = 
           getaddrinfo(nullptr, port, &hints, &server_address_information)) != 0) {
-        throw SocketException(string("getaddrinfo: ") + 
+        throw SocketException("getaddrinfo: "s + 
                 string(gai_strerror(return_value)));
     }
 
     // loop through the results from getaddrinfo
-    { addrinfo* i;
+    addrinfo* i;
     for (i = server_address_information; i; i = i->ai_next) {
 
         // ********************************************************************
@@ -138,7 +143,7 @@ SocketType SocketUtilities::create_server_socket(const char* port, int backlog) 
     if (!i) {
         throw SocketException("Failed to bind to this machine's IP and "
                 "port specified");
-    } }
+    }
     
 
 
@@ -151,7 +156,7 @@ SocketType SocketUtilities::create_server_socket(const char* port, int backlog) 
     }
 
     // log output
-    log_output(string("Created server socket ") + to_string(socket_to_return));
+    log_output("Created server socket "s + to_string(socket_to_return));
 
     return socket_to_return;
 }
@@ -172,15 +177,15 @@ SocketType SocketUtilities::create_client_socket(const char* address,
     hints.ai_socktype = SOCK_STREAM;    // TCP socket
 
     // make call to getaddrinfo
-    { int return_value;
+    int return_value;
     if ((return_value = getaddrinfo(address, port, &hints, 
                     &server_address_information)) != 0) {
 
-        throw SocketException(string("getaddrinfo: ") + 
+        throw SocketException("getaddrinfo: "s + 
                 string(gai_strerror(return_value)));
-    } } // close scope for variable not needed
+    } 
 
-    { addrinfo* i = nullptr;
+    addrinfo* i = nullptr;
     for (i = server_address_information; i; i = i->ai_next) {
         
         // ********************************************************************
@@ -211,7 +216,7 @@ SocketType SocketUtilities::create_client_socket(const char* address,
     if (!i) {
         throw SocketException("Failed to connect to remote server");
 
-    } } // close scope for variable not needed 
+    }
 
     // all done with this structure
     freeaddrinfo(server_address_information); 
@@ -219,13 +224,12 @@ SocketType SocketUtilities::create_client_socket(const char* address,
     // return the socket
     return socket_to_return;
 }
-    
 
-auto SocketUtilities::recv (SocketType sock_fd, void* buffer, 
-        size_t length, int flags) -> decltype (SocketUtilities::recv(0,0,0,0)) {
+ssize_t SocketUtilities::recv(SocketType sock_fd, void* buffer,
+        size_t length, int flags) {
 
     // Make the system call and handle errors
-    auto n = ::recv(sock_fd, buffer, length, flags);
+    ssize_t n = ::recv(sock_fd, buffer, length, flags);
 
     // Exceptional conditions are not tolerated for stream sockets.  In the case
     // of a non blocking socket, if there is a potential blocking situation then
@@ -239,24 +243,24 @@ auto SocketUtilities::recv (SocketType sock_fd, void* buffer,
     // not called on a socket that is non blocking when there isnt any data in
     // the socket to read from.  
     if (n == -1) {
-        throw SocketException(string("recv() on socket ") + 
-                to_string(sock_fd) + string(" returned with error ") + 
+        throw SocketException("recv() on socket "s + 
+                to_string(sock_fd) + " returned with error "s + 
                 string(strerror(errno)));
 
     }
 
     // Print to the network log
-    log_output(string("Called recv() on socket ") + to_string(sock_fd) + 
-            string(" : ") + string("received ") + to_string(n) + 
-            string(" bytes\n") + string((char*)buffer, ((char*)buffer) + n));
+    log_output("Called recv() on socket "s + to_string(sock_fd) + " : "s + 
+            "received "s + to_string(n) + " bytes\n"s + 
+            string((char*)buffer, ((char*)buffer) + n));
 
     return n;
 }
 
-auto SocketUtilities::send (SocketType sock_fd, void* buffer, size_t length, 
-        int flags) -> decltype(SocketUtilities::send(0,0,0,0)) {
+ssize_t SocketUtilities::send(SocketType sock_fd, const void* buffer, 
+        size_t length, int flags) {
 
-    auto n = ::send(sock_fd, buffer, length, flags);
+    ssize_t n = ::send(sock_fd, const_cast<void*>(buffer), length, flags);
 
     // Handle exceptional conditions, keep in mind that a return value of 0 is
     // not an exceptional condition.  This is in fact a feature of TCP;  this
@@ -264,45 +268,57 @@ auto SocketUtilities::send (SocketType sock_fd, void* buffer, size_t length,
     // has ended the connection then SIGPIPE would be generated if the flags do
     // not include MSG_NOSIGNAL
     if (n == -1) {
-        throw SocketException(string("send() on socket ") + 
-                to_string(sock_fd) + string(" returned with error ") + 
+        throw SocketException("send() on socket "s + 
+                to_string(sock_fd) + " returned with error "s + 
                 string(strerror(errno)));
     }
     
     // Print to the network log
-    log_output(string("Called send() on socket ") + to_string(sock_fd) + 
-            string(" : ") + string("sent ") + to_string(n) + 
-            string(" bytes\n") + string((char*)buffer, ((char*)buffer) + n));
+    log_output("Called send() on socket "s + to_string(sock_fd) + " : "s + 
+            "sent "s + to_string(n) + " bytes\n"s + 
+            string(reinterpret_cast<const char*>(buffer), 
+                reinterpret_cast<const char*>(buffer) + n));
 
     return n;
 }
 
-void SocketUtilities::send_all (SocketType sock_fd, 
-        const BufferType& data_to_send) {
-    
-    // loop and send data 
-    auto bytes_sent = decltype(data_to_send.size()) {0};
-    while (bytes_sent < data_to_send.size()) {
+void SocketUtilities::send_all(SocketType sock_fd, const void* buffer, 
+        size_t length) {
+
+    assert(length <= std::numeric_limits<int>::max());
+
+    // loop and send data
+    int bytes_sent {0};
+    while (bytes_sent < static_cast<int>(length)) {
+
+        // send the bytes and keep track of how many have been sent until now
         int sent = SocketUtilities::send(sock_fd, 
-                (void*) (data_to_send.data() + bytes_sent), 
-                data_to_send.size() - bytes_sent, MSG_NOSIGNAL);
+                reinterpret_cast<const void*>(
+                    reinterpret_cast<const char*>(buffer) + bytes_sent),
+                length - bytes_sent, MSG_NOSIGNAL);
         bytes_sent += sent;
 
-        // assert that too many bytes have not been sent.  I do not know if this
-        // can happen but just doing it here because 
-        assert(bytes_sent <= data_to_send.size());
+        // assert that too many bytes have not been sent.
+        assert(bytes_sent <= static_cast<int>(length));
     }
-
 }
 
-auto SocketUtilities::accept(SocketType sock_fd, sockaddr* address, 
-        socklen_t* address_length) -> decltype(SocketUtilities::accept(0,0,0)) {
+void SocketUtilities::send_all(SocketType sock_fd, 
+        const vector<char>& data_to_send) {
 
-    auto to_return_socket = ::accept(sock_fd, address, address_length);
+    // forward to another sending function
+    SocketUtilities::send_all(sock_fd, 
+            reinterpret_cast<const void*>(data_to_send.data()),
+            data_to_send.size());
+}
+
+SocketType SocketUtilities::accept(SocketType sock_fd, sockaddr* address, 
+        socklen_t* address_length) {
+
+    SocketType to_return_socket = ::accept(sock_fd, address, address_length);
     if (to_return_socket == -1) {
-        throw SocketException(string("Error calling accept() on socket ") + 
-                to_string(sock_fd) + string(" : ") + 
-                string(strerror(errno)));
+        throw SocketException("Error calling accept() on socket "s + 
+                to_string(sock_fd) + " : "s + string(strerror(errno)));
     }
 
     // assert that something horribly wrong didn't happen.  stdout, stdin and
@@ -311,7 +327,7 @@ auto SocketUtilities::accept(SocketType sock_fd, sockaddr* address,
            to_return_socket != STDIN_FILENO && 
            to_return_socket != STDERR_FILENO);
 
-    log_output(string("Accepted new connection on socket ") + 
+    log_output("Accepted new connection on socket "s + 
             to_string(to_return_socket));
     return to_return_socket;
 }

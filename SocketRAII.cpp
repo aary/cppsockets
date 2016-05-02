@@ -4,8 +4,10 @@
 
 using SocketUtilities::SocketType;
 
-// This is a null socket, this should be used to denote a non existing socket
-// as it maps to the highest possible value of an int
+/* 
+ * This is a null socket, this should be used to denote a non existing socket
+ * as it maps to the highest possible value of an int
+ */
 static const SocketType null_socket = std::numeric_limits<SocketType>::max();
 
 void SocketUtilities::SocketRAII::release() {

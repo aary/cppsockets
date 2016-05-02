@@ -23,8 +23,8 @@ int main(int argc, char *argv[]) {
         SocketUtilities::create_client_socket(argv[1], argv[2]);
     
     // send request
-    std::vector<char> data_to_send {request.begin(), request.end()};
-    SocketUtilities::send_all(client_socket, data_to_send);
+    SocketUtilities::send_all(client_socket, 
+            reinterpret_cast<const void*>(request.data()), request.size());
 
     // receive response, this will print the received string to stdout if
     // compiled with the macro SOCKET_LOG_COMMUNICATION defined

@@ -40,8 +40,9 @@ int main(int argc, char** argv) {
             SocketUtilities::recv(new_fd, buffer.data(), buffer.size());
 
             // send data
-            std::vector<char> data_to_send(response.begin(), response.end());
-            SocketUtilities::send_all(new_fd, data_to_send);
+            SocketUtilities::send_all(new_fd, 
+                reinterpret_cast<const void*>(response.data()), 
+                response.size());
 
         }, new_fd).detach(); 
     }

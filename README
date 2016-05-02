@@ -64,6 +64,18 @@ To compile and run it yourself type in `make sampleserver && ./sampleserver
 8000`.  Use curl as a client to this `curl --request GET
 "http://localhost:8000"`
 
+        Installation
+
+To install this library in your system type the following make command
+    
+    make install
+
+This will produce an archive called cppsockets.a that you should simply move
+to the folder with the rest of your code.  The header file
+`SocketUtilities.hpp` should be included wherever you use the functionality
+provided in this library.  Consider making a link to this header with the `-I`
+flag to `g++` or `clang++` when compiling.
+
 
         License 
 

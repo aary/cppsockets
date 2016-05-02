@@ -1,5 +1,4 @@
-#ifndef __CPP_SOCKETS_SOCKET_UTILITIES__HPP__
-#define __CPP_SOCKETS_SOCKET_UTILITIES__HPP__
+#pragma once
 
 /*
  * SocketUtilities.hpp 
@@ -43,13 +42,10 @@
  */
 namespace SocketUtilities {
 
-
 /* socket file descriptors */
 using SocketType = decltype(socket(0,0,0));
 /* generic file descriptors */
 using FileDescriptorType = SocketType;
-/* a generic buffer type */
-using BufferType = std::vector<char>;
 
 /*
  * Standard exception class, all exceptions thrown are of this type.
@@ -89,8 +85,7 @@ SocketType create_client_socket(const char* address, const char* port);
  *
  * Use the recv() version with the same intent as ::recv() 
  */
-auto recv (SocketType sock_fd, void* buffer, size_t length, 
-        int flags = 0) -> decltype(::recv(0,0,0,0));
+ssize_t recv (SocketType sock_fd, void* buffer, size_t length, int flags = 0);
 
 /*
  * A wrapper around the send() function that takes care of looping while
@@ -109,9 +104,10 @@ auto recv (SocketType sock_fd, void* buffer, size_t length,
  * that was passed in.  This loops till all the data has been sent so this
  * function will block.
  */
-auto send(SocketType sock_fd, void* buffer, size_t length, 
-        int flags = 0) -> decltype(::send(0,0,0,0));
-void send_all(SocketType sock_fd, const BufferType& data_to_send);
+ssize_t send(SocketType sock_fd, const void* buffer, size_t length, 
+        int flags = 0);
+void send_all(SocketType sock_fd, const std::vector<char>& data_to_send);
+void send_all(SocketType sock_fd, const void* buffer, size_t length);
 
 /*
  * A wrapper function around the accept() network call.  This method adds
@@ -122,8 +118,8 @@ void send_all(SocketType sock_fd, const BufferType& data_to_send);
  * to assign it to a SocketRAII object which would close the socket on
  * destruction. 
  */
-auto accept(SocketType sock_fd, sockaddr* address = nullptr, 
-        socklen_t* address_len = nullptr) -> decltype(::accept(0,0,0));
+SocketType accept(SocketType sock_fd, sockaddr* address = nullptr, 
+        socklen_t* address_len = nullptr);
 
 /*
  * Sets the socket sock_fd to be non-blocking.  Any subsequent calls to blocking
@@ -161,10 +157,6 @@ extern std::atomic<bool> network_output_protect;
 
 }
 
-#endif /* __SOCKET_UTILITIES__ */
-
-/*
- * Include the other headers in this library for convenience
- */
+/* Include the other headers in this library for convenience */
 #include "SocketRAII.hpp"
 #include "KernelEventQueue.hpp"

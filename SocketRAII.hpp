@@ -48,9 +48,7 @@ public:
     SocketRAII& operator=(const SocketRAII&) = delete;
     SocketRAII& operator=(SocketRAII&&) = delete;
 
-    /*
-     * Convert to the type of the socket implicitly
-     */
+     /* Convert to the type of the socket implicitly */
     operator SocketType ();
 
 private:
