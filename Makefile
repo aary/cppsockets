@@ -1,10 +1,10 @@
 SOURCES = $(wildcard *.cpp) 
 SOURCES := $(filter-out tcp_socket_client.cpp, $(SOURCES))
 SOURCES := $(filter-out tcp_socket_server.cpp, $(SOURCES))
-OBJECTS = $(SOURCES:%.cpp=%.o)
 COMPILER = g++
 USER_FLAGS = 
-FLAGS = -std=c++14 -O3 -Wall -Wvla -Werror -Wextra -pedantic $(USER_FLAGS)
+INCLUDE_DIR = include
+FLAGS = -std=c++14 -O3 -Wall -Wvla -Werror -Wextra -pedantic $(USER_FLAGS) -I $(INCLUDE_DIR)
 
 all: clean $(OBJECTS)
 
@@ -13,11 +13,12 @@ all: clean $(OBJECTS)
 %.o:
 	$(COMPILER) $(FLAGS) -c $*.cpp
 
-install: SocketRAII.cpp SocketUtilities.cpp
-	$(COMPILER) $(FLAGS) SocketRAII.cpp -c
-	$(COMPILER) $(FLAGS) SocketUtilities.cpp -c
+install: src/SocketRAII.cpp src/SocketUtilities.cpp
+	$(COMPILER) $(FLAGS) src/SocketRAII.cpp -c
+	$(COMPILER) $(FLAGS) src/SocketUtilities.cpp -c
 	ar rcs cppsockets.a SocketRAII.o SocketUtilities.o
-	rm SocketRAII.o SocketUtilities.o
+	rm *.o
+	ln -s include/* ./
 
 clean:
 	rm -f a.out
@@ -25,20 +26,23 @@ clean:
 	rm -f sampleserver
 	rm -f sampleclient
 	rm -f cppsockets.a
+	find . -type l -maxdepth 1 -delete
 
 debug: FLAGS += -g3 -DDEBUG
 debug: $(OBJECTS)
 	$(COMPILER) $(FLAGS) $(OBJECTS)
 
 # build sample server and client sources
-tcp_socket_client.o: tcp_socket_client.cpp
-	$(COMPILER) $(FLAGS) -c tcp_socket_client.cpp
-tcp_socket_server.o: tcp_socket_server.cpp
-	$(COMPILER) $(FLAGS) -c tcp_socket_server.cpp
+tcp_socket_client.o: tests/tcp_socket_client.cpp
+	$(COMPILER) $(FLAGS) -c tests/tcp_socket_client.cpp
+tcp_socket_server.o: tests/tcp_socket_server.cpp
+	$(COMPILER) $(FLAGS) -c tests/tcp_socket_server.cpp
 
 # Build sample server and client
-sampleserver: $(OBJECTS) tcp_socket_server.o
-	$(COMPILER) $(FLAGS) $(OBJECTS) tcp_socket_server.o -o $@
+sampleserver: install tcp_socket_server.o
+	$(COMPILER) $(FLAGS) cppsockets.a tcp_socket_server.o -o $@
+	rm *.o
 
-sampleclient: $(OBJECTS) tcp_socket_client.o
-	$(COMPILER) $(FLAGS) $(OBJECTS) tcp_socket_client.o -o $@
+sampleclient: install tcp_socket_client.o
+	$(COMPILER) $(FLAGS) cppsockets.a tcp_socket_client.o -o $@
+	rm *.o

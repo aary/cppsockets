@@ -77,6 +77,16 @@ to the folder with the rest of your code.  The header file
 provided in this library.  Consider making a link to this header with the `-I`
 flag to `g++` or `clang++` when compiling.
 
+### Directory organization
+The directories for this project have been organized as follows
+
+- `./include` Contains all the header files that are public in the library,
+  `make install` will create symlinks in the root directory for this project
+  for easy including
+- `./src` contains all the private source code for this library.  Symlinks to
+  the headers in the include/ directory are present along with symlinks to
+  some tests
+- `./tests` contains test cases
 
 ### License 
 
