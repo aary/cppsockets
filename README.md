@@ -102,9 +102,9 @@ With `my_network_program.cpp` including the headers for this library like so
 ## Directory organization
 The directories for this project have been organized as follows
 
-- `./include` Contains all the header files that are public in the library,
-  `make install` will create symlinks in the root directory for this project
-  for easy `#include`ing
+- `./include` Contains symlinks to all the header files that are public for
+  this library `make install` will create symlinks in the root directory for
+  this project for easy `#include`ing
 - `./src` contains all the private source code for this library.  Symlinks to
   the headers in the include/ directory are present along with symlinks to
   some tests
