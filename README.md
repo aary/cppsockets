@@ -66,11 +66,14 @@ To compile and run it yourself type in `make sampleserver && ./sampleserver
 
 ### Installation
 
-To install this library in your system type the following make command, add it
-as a submodule to your project and then invoke `make`
+To install this library for use with your project, first add it as a submodule
 ```
 git submodule add https://github.com/aary/cppsockets.git submodules/cppsockets
 git submodule update --init --recursive
+```
+
+And then install it like so it
+```
 cd submodules/cppsockets
 make install
 ```
