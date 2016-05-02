@@ -75,15 +75,26 @@ This will produce an archive called cppsockets.a that you should simply move
 to the folder with the rest of your code.  This will also produce symlinks to
 all the header files that you may need.  The header file `SocketUtilities.hpp`
 should be included wherever you use the functionality provided in this
-library.  Consider making a link to this header with the `-I` flag to `g++` or
-`clang++` when compiling.
+library.  Consider making a link to this library with the `-I` flag to `g++` or
+`clang++` when compiling.  An example build process to use this library would be
+```
+cd cppsockets
+make install
+mv cppsockets.a ../ myproject
+cd ../myproject
+g++ -std=c++14 -I ../cppsockets my_network_program.cpp cppsockets.a
+```
+With `my_network_program.cpp` including the headers for this library like so
+```C++
+#include "cppsockets/SocketUtilities.hpp"
+```
 
 ### Directory organization
 The directories for this project have been organized as follows
 
 - `./include` Contains all the header files that are public in the library,
   `make install` will create symlinks in the root directory for this project
-  for easy including
+  for easy `#include`ing
 - `./src` contains all the private source code for this library.  Symlinks to
   the headers in the include/ directory are present along with symlinks to
   some tests
