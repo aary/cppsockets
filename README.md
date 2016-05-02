@@ -72,10 +72,11 @@ make install
 ```
 
 This will produce an archive called cppsockets.a that you should simply move
-to the folder with the rest of your code.  The header file
-`SocketUtilities.hpp` should be included wherever you use the functionality
-provided in this library.  Consider making a link to this header with the `-I`
-flag to `g++` or `clang++` when compiling.
+to the folder with the rest of your code.  This will also produce symlinks to
+all the header files that you may need.  The header file `SocketUtilities.hpp`
+should be included wherever you use the functionality provided in this
+library.  Consider making a link to this header with the `-I` flag to `g++` or
+`clang++` when compiling.
 
 ### Directory organization
 The directories for this project have been organized as follows
