@@ -66,17 +66,24 @@ To compile and run it yourself type in `make sampleserver && ./sampleserver
 
 ### Installation
 
-To install this library in your system type the following make command
+To install this library in your system type the following make command, add it
+as a submodule to your project and then invoke `make`
 ```
+git submodule add https://github.com/aary/cppsockets.git submodules/cppsockets
+git submodule update --init --recursive
+cd submodules/cppsockets
 make install
 ```
 
 This will produce an archive called cppsockets.a that you should simply move
 to the folder with the rest of your code.  This will also produce symlinks to
-all the header files that you may need.  The header file `SocketUtilities.hpp`
-should be included wherever you use the functionality provided in this
-library.  Consider making a link to this library with the `-I` flag to `g++` or
-`clang++` when compiling.  An example build process to use this library would be
+all the header files that you may need.  
+
+The header file `SocketUtilities.hpp` should be included wherever you use the
+functionality provided in this library.  Consider making a link to this
+library with the `-I` flag to `g++` or `clang++` when compiling.  
+
+An example build process to use this library would be
 ```
 cd submodules/cppsockets
 make install
