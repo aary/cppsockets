@@ -3,7 +3,7 @@
 This project aims to provide an object based interface to the traditional
 socket I/O system calls in such a way that is manageable and clean.
 
-### Sample server using this library
+## Sample server using this library
 
 ```C++
 #include <iostream>
@@ -64,16 +64,16 @@ To compile and run it yourself type in `make sampleserver && ./sampleserver
 8000`.  Use curl as a client to this `curl --request GET
 "http://localhost:8000"`
 
-### Installation
+## Installation
 
 To install this library for use with your project, first add it as a submodule
-```
+```shell
 git submodule add https://github.com/aary/cppsockets.git submodules/cppsockets
 git submodule update --init --recursive
 ```
 
 And then install it like so it
-```
+```shell
 cd submodules/cppsockets
 make install
 ```
@@ -87,7 +87,7 @@ functionality provided in this library.  Consider making a link to this
 library with the `-I` flag to `g++` or `clang++` when compiling.  
 
 An example build process to use this library would be
-```
+```shell
 cd submodules/cppsockets
 make install
 mv cppsockets.a ../../myproject
@@ -99,7 +99,7 @@ With `my_network_program.cpp` including the headers for this library like so
 #include "cppsockets/SocketUtilities.hpp"
 ```
 
-### Directory organization
+## Directory organization
 The directories for this project have been organized as follows
 
 - `./include` Contains all the header files that are public in the library,
@@ -110,7 +110,7 @@ The directories for this project have been organized as follows
   some tests
 - `./tests` contains test cases
 
-### License 
+## License 
 
 Copyright (c) 2015 Aaryaman Sagar
 
