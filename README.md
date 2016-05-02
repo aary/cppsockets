@@ -78,11 +78,11 @@ should be included wherever you use the functionality provided in this
 library.  Consider making a link to this library with the `-I` flag to `g++` or
 `clang++` when compiling.  An example build process to use this library would be
 ```
-cd cppsockets
+cd submodules/cppsockets
 make install
-mv cppsockets.a ../myproject
+mv cppsockets.a ../../myproject
 cd ../myproject
-g++ -std=c++14 -I ../cppsockets my_network_program.cpp cppsockets.a
+g++ -std=c++14 -I ../submodules my_network_program.cpp cppsockets.a
 ```
 With `my_network_program.cpp` including the headers for this library like so
 ```C++
