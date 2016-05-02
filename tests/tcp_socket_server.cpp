@@ -7,9 +7,10 @@
 #include "SocketUtilities.hpp"
 using namespace std;
 
-const string response = 
+static const string response {
 "HTTP/1.1 200 OK\n\n"
-"Hello, World!";
+"Hello, World!"
+};
 
 int main(int argc, char** argv) {
     

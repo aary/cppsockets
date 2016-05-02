@@ -6,10 +6,11 @@
 using namespace std;
 
 /* A standard http get request from curl */
-const string request = "GET / HTTP/1.1\n"
+static const string request {"GET / HTTP/1.1\n"
 "Host: localhost:8000\n"
 "User-Agent: curl/7.43.0\n"
-"Accept: */*\n\n";
+"Accept: */*\n\n"
+};
 
 int main(int argc, char *argv[]) {
 
