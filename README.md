@@ -66,7 +66,8 @@ To compile and run it yourself type in `make sampleserver && ./sampleserver
 
 ## Installation
 
-To install this library for use with your project, first add it as a submodule
+To install this library for use with your project, either first add it as a
+submodule or download/clone this repository and follow the steps below
 ```shell
 git submodule add https://github.com/aary/cppsockets.git submodules/cppsockets
 git submodule update --init --recursive
@@ -113,6 +114,10 @@ The directories for this project have been organized as follows
   the headers in the include/ directory are present along with symlinks to
   some tests
 - `./tests` contains test cases
+
+## Requirements
+This library has no external requirements.  Just follow the steps in
+installation section to install this library for use with your projects.
 
 ## Contributing
 Please fork this repository and contribute back using pull requests. Features
