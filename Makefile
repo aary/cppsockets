@@ -14,14 +14,14 @@ all: clean $(OBJECTS)
 install: src/SocketRAII.cpp src/SocketUtilities.cpp
 	$(COMPILER) $(FLAGS) src/SocketRAII.cpp -c
 	$(COMPILER) $(FLAGS) src/SocketUtilities.cpp -c
-	ar rcs cppsockets.a SocketRAII.o SocketUtilities.o
+	ar rcs libcppsockets.a SocketRAII.o SocketUtilities.o
 	@rm *.o
 	ln -s include/* ./
 
 clean_private:
 	rm -f a.out
 	rm -f *.o
-	rm -f cppsockets.a
+	rm -f libcppsockets.a
 	find . -type l -maxdepth 1 -delete
 
 clean_public:
@@ -43,9 +43,9 @@ tcp_socket_server.o: tests/tcp_socket_server.cpp
 
 # Build sample server and client
 sampleserver: install tcp_socket_server.o
-	$(COMPILER) $(FLAGS) cppsockets.a tcp_socket_server.o -o $@
+	$(COMPILER) $(FLAGS) libcppsockets.a tcp_socket_server.o -o $@
 	@make clean_private
 
 sampleclient: install tcp_socket_client.o
-	$(COMPILER) $(FLAGS) cppsockets.a tcp_socket_client.o -o $@
+	$(COMPILER) $(FLAGS) libcppsockets.a tcp_socket_client.o -o $@
 	@make clean_private

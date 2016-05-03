@@ -78,9 +78,13 @@ cd submodules/cppsockets
 make install
 ```
 
-This will produce an archive called `cppsockets.a` that you should simply move
-to the folder with the rest of your code.  This will also produce symlinks to
+This will produce an archive called `libcppsockets.a` that you should simply
+move to the folder with the rest of your code.  Linking with this archive will
+link with the objects for this library.  This will also produce symlinks to
 all the header files that you may need.
+
+** This is not a header only library, so you will have to link with
+`libcppsockets.a. **
 
 The header file `SocketUtilities.hpp` should be included wherever you use the
 functionality provided in this library.  Consider making a link to this
@@ -90,9 +94,9 @@ An example build process to use this library would be
 ```shell
 cd submodules/cppsockets
 make install
-mv cppsockets.a ../../myproject
+mv libcppsockets.a ../../myproject
 cd ../myproject
-g++ -std=c++14 -I ../submodules my_network_program.cpp cppsockets.a
+g++ -std=c++14 -I ../submodules my_network_program.cpp libcppsockets.a
 ```
 With `my_network_program.cpp` including the headers for this library like so
 ```C++
