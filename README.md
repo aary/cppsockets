@@ -83,8 +83,8 @@ move to the folder with the rest of your code.  Linking with this archive will
 link with the objects for this library.  This will also produce symlinks to
 all the header files that you may need.
 
-** This is not a header only library, so you will have to link with
-`libcppsockets.a. **
+**This is not a header only library, so you will have to link with
+`libcppsockets.a.**
 
 The header file `SocketUtilities.hpp` should be included wherever you use the
 functionality provided in this library.  Consider making a link to this
