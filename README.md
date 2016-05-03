@@ -25,7 +25,7 @@ int main(int argc, char** argv) {
     // Error check command line arguments
     if (argc != 2) {
         cerr << "Usage: " << argv[0] << " <port_number>" << endl;
-        exit(1);
+        return 1;
     }
 
     // create socket on which the server will listen

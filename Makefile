@@ -36,16 +36,16 @@ debug: $(OBJECTS)
 	$(COMPILER) $(FLAGS) $(OBJECTS)
 
 # build sample server and client sources
-tcp_socket_client.o: tests/tcp_socket_client.cpp
-	$(COMPILER) $(FLAGS) -c tests/tcp_socket_client.cpp
-tcp_socket_server.o: tests/tcp_socket_server.cpp
-	$(COMPILER) $(FLAGS) -c tests/tcp_socket_server.cpp
+tcp_client.o: tests/tcp_client.cpp
+	$(COMPILER) $(FLAGS) -c tests/tcp_client.cpp
+tcp_server.o: tests/tcp_server.cpp
+	$(COMPILER) $(FLAGS) -c tests/tcp_server.cpp
 
 # Build sample server and client
-sampleserver: install tcp_socket_server.o
-	$(COMPILER) $(FLAGS) libcppsockets.a tcp_socket_server.o -o $@
+sampleserver: install tcp_server.o
+	$(COMPILER) $(FLAGS) libcppsockets.a tcp_server.o -o $@
 	@make clean_private
 
-sampleclient: install tcp_socket_client.o
-	$(COMPILER) $(FLAGS) libcppsockets.a tcp_socket_client.o -o $@
+sampleclient: install tcp_client.o
+	$(COMPILER) $(FLAGS) libcppsockets.a tcp_client.o -o $@
 	@make clean_private
