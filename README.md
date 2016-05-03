@@ -116,9 +116,9 @@ The directories for this project have been organized as follows
 - `./tests` contains test cases
 
 ## Requirements
-This library has no external requirements other than the STL.  Just follow the
-steps in installation section to install this library for use with your
-projects.
+This library has no external requirements other than the C++ standard library.
+Just follow the steps in installation section to install this library for use
+with your projects.
 
 ## Contributing
 Please fork this repository and contribute back using pull requests. Features
