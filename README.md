@@ -114,3 +114,7 @@ The directories for this project have been organized as follows
   some tests
 - `./tests` contains test cases
 
+## Contributing
+Please fork this repository and contribute back using pull requests. Features
+can be requested using issues. All code, comments, and critiques are greatly
+appreciated.
