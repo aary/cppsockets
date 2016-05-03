@@ -80,6 +80,19 @@ SocketType create_server_socket(const char* port, int backlog = 10);
 SocketType create_client_socket(const char* address, const char* port);
 
 /*
+ * Creates a unix socket on which a server may listen, wait for incoming
+ * connections.  The socket is created in the file specified.
+ */
+SocketType create_server_unix_socket(const std::string& socket_path, 
+        int backlog = 10);
+
+/*
+ * Creates a client that is connected to another unix socket.  The socket path
+ * should be provided to the function
+ */
+SocketType create_client_unix_socket(const std::string& socket_path);
+
+/*
  * A wrapper around the recv() function that takes care of looping while data
  * has not been received, and exceptional conditions.
  *

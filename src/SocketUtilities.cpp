@@ -7,10 +7,13 @@
 #include <sstream>
 #include <string>
 #include <sys/socket.h>
+#include <sys/un.h>
 #include <unistd.h>
 #include <cstring>
 #include <stdexcept>
 #include <limits>
+
+using namespace std::literals::string_literals;
 
 // MSG_NOSIGNAL doesn't exist on Mac OSX
 #if defined(__APPLE__)
@@ -225,23 +228,92 @@ SocketType SocketUtilities::create_client_socket(const char* address,
     return socket_to_return;
 }
 
+SocketType SocketUtilities::create_server_unix_socket(
+        const string& socket_path, int backlog) {
+    
+    // STEP 1 : socket()
+    int unix_socket = socket(AF_UNIX, SOCK_STREAM, 0);
+    if (unix_socket == -1) {
+        throw SocketException {"Error occured in socket() call : "s + 
+            string(std::strerror(errno))};
+    }
+
+    // STEP 2 : bind(), setup the address structures for bind()
+    sockaddr_un local_address;
+    local_address.sun_family = AF_UNIX;
+    std::copy(socket_path.begin(), socket_path.end(), 
+            local_address.sun_path);
+
+    // unlink from before
+    ::unlink(socket_path.c_str());
+
+    // STEP 2 : bind()
+    if (::bind(unix_socket, reinterpret_cast<sockaddr*>(&local_address), 
+                sizeof(local_address)) == -1) {
+        throw SocketException {"Error occured in bind() call : "s + 
+            string(strerror(errno))};
+    }
+
+    // STEP 3 : listen()
+    if (::listen(unix_socket, backlog) == -1) {
+        throw SocketException {"Error occured in listen() call : "s + 
+            string(strerror(errno))};
+    }
+
+    // log output
+    log_output("Created unix server socket on file descriptor"s + 
+            to_string(unix_socket) + "connected to file "s + socket_path);
+
+    return unix_socket;
+
+}
+
+SocketType SocketUtilities::create_client_unix_socket(
+        const std::string& socket_path) {
+
+    // STEP 1 : socket()
+    int unix_socket = socket(AF_UNIX, SOCK_STREAM, 0);
+    if (unix_socket == -1) {
+        throw SocketException {"Error in socket() call : "s + 
+            string(strerror(errno))};
+    }
+    
+    // STEP 2 : connect()
+    sockaddr_un remote_address;
+    remote_address.sun_family = AF_UNIX;
+    std::copy(socket_path.begin(), socket_path.end(), 
+            remote_address.sun_path);
+
+    if (::connect(unix_socket, 
+                reinterpret_cast<sockaddr*>(&remote_address), 
+                sizeof(remote_address)) == -1) {
+        throw SocketException {"Error in connect() call : "s + 
+            string(strerror(errno))};
+    }
+
+    // log output
+    log_output("Created unix client socket on file descriptor "s + 
+            to_string(unix_socket) + " connected to file "s + socket_path);
+
+    return unix_socket;
+}
+
 ssize_t SocketUtilities::recv(SocketType sock_fd, void* buffer,
         size_t length, int flags) {
 
     // Make the system call and handle errors
     ssize_t n = ::recv(sock_fd, buffer, length, flags);
 
-    // Exceptional conditions are not tolerated for stream sockets.  In the case
-    // of a non blocking socket, if there is a potential blocking situation then
-    // the user did not call poll() correctly and did not perform the poll()
-    // operation correctly, either using the normal system call or the wrapper
-    // provided in this module.  
+    // Exceptional conditions are not tolerated for stream sockets.  In the
+    // case of a non blocking socket, if there is a potential blocking
+    // situation then the user did not call poll() correctly and did not
+    // perform the poll() operation correctly, either using the normal system
+    // call or the wrapper provided in this module.
     //
-    // If a threadsafe genralized version of this
-    // call is used either in the form of kqueues or epoll then the user
-    // should poll the socket file descriptor such that the recv function is
-    // not called on a socket that is non blocking when there isnt any data in
-    // the socket to read from.  
+    // If a threadsafe genralized version of this call is used either in the
+    // form of kqueues or epoll then the user should poll the socket file
+    // descriptor such that the recv function is not called on a socket that
+    // is non blocking when there isnt any data in the socket to read from.
     if (n == -1) {
         throw SocketException("recv() on socket "s + 
                 to_string(sock_fd) + " returned with error "s + 
