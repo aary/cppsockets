@@ -147,8 +147,6 @@ SocketType SocketUtilities::create_server_socket(const char* port,
         throw SocketException("Failed to bind to this machine's IP and "
                 "port specified");
     }
-    
-
 
     // ************************************************************************
     // *                               STEP 5                                 *

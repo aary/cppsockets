@@ -35,6 +35,7 @@
 #include <arpa/inet.h>
 #include <sys/fcntl.h>
 #include <atomic>
+#include <utility>
 
 /*
  * Main namespace.  Every utility in this library is within this namespace.  All
@@ -61,6 +62,33 @@ class SocketException;
  */
 class SocketRAII;
 class KernelEventQueue;
+
+/*
+ * Sets the default logging output stream for this class.  Thread safe.
+ * Async unsafe.  Cannot use this function safely from within signal
+ * handlers.  As a result of every function making calls to log events, this
+ * class should be used with care in an signal handling environment. 
+ */
+void set_log_stream(std::ostream& log_stream_in);
+
+/*
+ * Use this to protect data races when printing to the same output stream.  This
+ * sockets library uses stdout by default.  To change this call the
+ * set_log_stream() function the first thing when main() starts
+ */
+extern std::atomic<bool> network_output_protect;
+
+/*
+ * Define this macro to enable logged output to the log stream set by the user. 
+ * The default stream for log messages is stdout.  Be careful with using this
+ * utility.  Output logging is not async safe and uses an internal spinlock to
+ * prevent thread contention with the standard output stream for logging. 
+ */
+#ifdef SOCKET_LOG_COMMUNICATION
+    constexpr bool log_events = true;
+#else
+    constexpr bool log_events = false;
+#endif
 
 /*
  * Creates a socket on which a server may listen.  The socket is created in
@@ -140,33 +168,6 @@ SocketType accept(SocketType sock_fd, sockaddr* address = nullptr,
  * EWOULDBLOCK.
  */
 void make_non_blocking(SocketType sock_fd);
-
-/*
- * Sets the default logging output stream for this class.  Thread safe.
- * Async unsafe.  Cannot use this function safely from within signal
- * handlers.  As a result of every function making calls to log events, this
- * class should be used with care in an signal handling environment. 
- */
-void set_log_stream(std::ostream& log_stream_in);
-
-/*
- * Use this to protect data races when printing to the same output stream.  This
- * sockets library uses stdout by default.  To change this call the
- * set_log_stream() function the first thing when main() starts
- */
-extern std::atomic<bool> network_output_protect;
-
-/*
- * Define this macro to enable logged output to the log stream set by the user. 
- * The default stream for log messages is stdout.  Be careful with using this
- * utility.  Output logging is not async safe and uses an internal spinlock to
- * prevent thread contention with the standard output stream for logging. 
- */
-#ifdef SOCKET_LOG_COMMUNICATION
-    constexpr bool log_events = true;
-#else
-    constexpr bool log_events = false;
-#endif
 
 }
 
