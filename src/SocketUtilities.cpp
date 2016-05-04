@@ -264,7 +264,7 @@ SocketType SocketUtilities::create_server_unix_socket(
 
     // log output
     log_output("Created unix server socket on file descriptor"s + 
-            to_string(unix_socket) + "connected to file "s + socket_path);
+            to_string(unix_socket) + ", connected to file "s + socket_path);
 
     return unix_socket;
 
@@ -295,7 +295,7 @@ SocketType SocketUtilities::create_client_unix_socket(
 
     // log output
     log_output("Created unix client socket on file descriptor "s + 
-            to_string(unix_socket) + " connected to file "s + socket_path);
+            to_string(unix_socket) + ", connected to file "s + socket_path);
 
     return unix_socket;
 }
