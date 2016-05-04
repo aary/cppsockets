@@ -20,8 +20,8 @@ int main(int argc, char *argv[]) {
     }
 
     using SocketUtilities::SocketRAII;
-    SocketRAII client_socket = 
-        SocketUtilities::create_client_socket(argv[1], argv[2]);
+    SocketRAII client_socket { 
+        SocketUtilities::create_client_socket(argv[1], argv[2])};
     
     // send request
     SocketUtilities::send_all(client_socket, 

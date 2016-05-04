@@ -10,6 +10,7 @@
 #include <stdexcept>
 #include <string>
 #include "SocketUtilities.hpp"
+#include "SocketRAII.hpp"
 using namespace std;
 using namespace std::literals::string_literals;
 using std::array;
@@ -19,7 +20,9 @@ static const string REQUEST {"Some request"};
 
 int main() { 
 
-    int unix_socket = SocketUtilities::create_client_unix_socket(SOCKET_PATH);
+    using SocketUtilities::SocketRAII;
+    SocketRAII unix_socket {
+        SocketUtilities::create_client_unix_socket(SOCKET_PATH)};
 
     // send data
     SocketUtilities::send_all(unix_socket, 

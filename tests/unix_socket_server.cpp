@@ -11,6 +11,7 @@
 #include <string>
 #include <fstream>
 #include "SocketUtilities.hpp"
+#include "SocketRAII.hpp"
 using namespace std;
 using namespace std::literals::string_literals;
 using std::array;
@@ -20,7 +21,9 @@ static const string SOCKET_FILE {"./unix_sock"};
 int main() {
     
     // create a server unix socket
-    int unix_socket = SocketUtilities::create_server_unix_socket(SOCKET_FILE);
+    using SocketUtilities::SocketRAII;
+    SocketRAII unix_socket {
+        SocketUtilities::create_server_unix_socket(SOCKET_FILE)};
 
     // main accept loop
     while (true) { 
@@ -32,7 +35,7 @@ int main() {
         if (answer == 'n') { break; }
 
         cout << "Accepting connection ..." << endl;
-        auto sock_fd = SocketUtilities::accept(unix_socket);
+        SocketRAII sock_fd {SocketUtilities::accept(unix_socket)};
         
         // accept data and echo a response back
         array<char, 100> buffer;
@@ -44,13 +47,9 @@ int main() {
         SocketUtilities::send_all(sock_fd, 
                 reinterpret_cast<const void*>(response.data()), 
                 response.size());
-
-        // close socket
-        ::close(sock_fd);
     }
 
-    // close the server socket
-    ::close(unix_socket);
+    // unlink the server socket to delete the file
     ::unlink(SOCKET_FILE.c_str());
 
     return 0;

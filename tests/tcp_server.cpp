@@ -35,7 +35,7 @@ int main(int argc, char** argv) {
         // receive data in a non blocking manner
         std::thread ([](auto new_fd) {
 
-            SocketRAII auto_close(new_fd);
+            SocketRAII auto_close {new_fd};
 
             array<char, 1024> buffer;
             SocketUtilities::recv(new_fd, buffer.data(), buffer.size());
