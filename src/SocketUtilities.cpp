@@ -7,6 +7,8 @@
 #include <sstream>
 #include <string>
 #include <sys/socket.h>
+#include <sys/types.h>
+#include <netdb.h>
 #include <sys/un.h>
 #include <unistd.h>
 #include <cstring>
@@ -42,11 +44,11 @@ using namespace std::literals::string_literals; /* for operator "" */
 /* The standard stream to which logged messages are displayed. */
 static ostream* log_stream = &std::cout;
 
-/* define the global network_output_protect variable */
+/* define the global network_output_guard variable */
 namespace SocketUtilities { 
-    std::atomic<bool> network_output_protect (false); 
+    std::atomic<bool> network_output_guard (false); 
 }
-using SocketUtilities::network_output_protect;
+using SocketUtilities::network_output_guard;
 
 /*
  * Logging utility for this class.  Optimized away at compile time when the
@@ -57,29 +59,29 @@ template <bool output> void _log_output(const string& output_message);
 template <> void _log_output<true>(const string& output_message) {
 
     // spin and acquire the lock
-    while (network_output_protect.exchange(true)) {}
+    while (network_output_guard.exchange(true)) {}
         (*log_stream) << "@@@ Network Log @@@  " << output_message << 
             (output_message.back() == '\n' ? "" : "\n");
-    network_output_protect.store(false);
+    network_output_guard.store(false);
 }
 template <> void _log_output<false> (__attribute__((unused)) // silence unused 
         const string& output_message) {}                     // variable warning
 static constexpr void (*log_output) (const string& output_message) = 
-    _log_output<SocketUtilities::log_events>;
+    &_log_output<true>;
 
 
 /******************************************************************************
  *                           FUNCTION IMPLEMENTIONS                           *
  ******************************************************************************/
-void SocketUtilities::set_log_stream(std::ostream& log_stream_in) {
+void SocketUtilities::set_output_stream(std::ostream& log_stream_in) {
 
     // spin and acquire lock
-    while(network_output_protect.exchange(true)) {}
+    while(network_output_guard.exchange(true)) {}
         log_stream = &log_stream_in;
-    network_output_protect.store(false);
+    network_output_guard.store(false);
 }
 
-SocketType SocketUtilities::create_server_socket(const char* port, 
+SocketType SocketUtilities::create_server_socket(const string& port, 
         int backlog) {
 
     SocketType socket_to_return;
@@ -98,7 +100,9 @@ SocketType SocketUtilities::create_server_socket(const char* port,
     // the socket connection
     int return_value;
     if ((return_value = 
-          getaddrinfo(nullptr, port, &hints, &server_address_information)) != 0) {
+          getaddrinfo(nullptr, port.c_str(), &hints, 
+              &server_address_information)) != 0) {
+
         throw SocketException("getaddrinfo: "s + 
                 string(gai_strerror(return_value)));
     }
@@ -162,8 +166,8 @@ SocketType SocketUtilities::create_server_socket(const char* port,
     return socket_to_return;
 }
 
-SocketType SocketUtilities::create_client_socket(const char* address, 
-        const char* port) {
+SocketType SocketUtilities::create_client_socket(const string& address, 
+        const string& port) {
     
     SocketType socket_to_return;
 
@@ -179,7 +183,7 @@ SocketType SocketUtilities::create_client_socket(const char* address,
 
     // make call to getaddrinfo
     int return_value;
-    if ((return_value = getaddrinfo(address, port, &hints, 
+    if ((return_value = getaddrinfo(address.c_str(), port.c_str(), &hints, 
                     &server_address_information)) != 0) {
 
         throw SocketException("getaddrinfo: "s + 

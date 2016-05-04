@@ -9,6 +9,7 @@
 #include <iterator>
 #include <stdexcept>
 #include <string>
+#include <fstream>
 #include "SocketUtilities.hpp"
 using namespace std;
 using namespace std::literals::string_literals;

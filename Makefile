@@ -1,8 +1,7 @@
 COMPILER = g++
 USER_FLAGS = 
 INCLUDE_DIR = include
-FLAGS = -std=c++14 -O3 -Wall -Wvla -Werror -Wextra -pedantic $(USER_FLAGS) -I $(INCLUDE_DIR)
-
+FLAGS = -std=c++14 -O3 -Wall -Wvla -Werror -Wextra -pedantic $(USER_FLAGS) -I $(INCLUDE_DIR) -DSOCKET_LOG_COMMUNICATION
 
 # Rule for `make *.o`, the make program uses this whenever it sees a
 # *.o make dependency like in the rule above
@@ -15,6 +14,14 @@ install: src/SocketRAII.cpp src/SocketUtilities.cpp
 	ar rcs libcppsockets.a SocketRAII.o SocketUtilities.o
 	@rm *.o
 	ln -sf include/* ./
+
+tests: clean
+	$(eval FLAGS += -g3 -DDEBUG)
+	@make sampleserver
+	@make sampleclient
+	@make sampleserverunix
+	@make sampleclientunix
+	@printf "\nAll tests built successfully\n"
 
 clean_private:
 	rm -f a.out
@@ -31,18 +38,6 @@ clean_public:
 
 clean: clean_private clean_public
 	@printf ""
-
-tests: clean
-	$(eval FLAGS += -g3 -DDEBUG -DSOCKET_LOG_COMMUNICATION)
-	@make sampleserver
-	@make sampleclient
-	@make sampleserverunix
-	@make sampleclientunix
-	@printf "\nAll tests built successfully\n"
-
-debug: FLAGS += -g3 -DDEBUG
-debug: $(OBJECTS)
-	$(COMPILER) $(FLAGS) $(OBJECTS)
 
 # build sample server and client sources
 tcp_client.o: tests/tcp_client.cpp

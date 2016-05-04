@@ -26,16 +26,11 @@
  *         with timeouts
  */
 
-#include <iostream>
-#include <vector>
-#include <sys/types.h>
-#include <sys/socket.h>
-#include <netinet/in.h>
-#include <netdb.h>
-#include <arpa/inet.h>
-#include <sys/fcntl.h>
-#include <atomic>
-#include <utility>
+#include <iostream>         /* ostream */
+#include <vector>           /* vector<> */
+#include <sys/socket.h>     /* socket() */
+#include <atomic>           /* atomic<bool> */
+#include <utility>          /* std::pair<> */
 
 /*
  * Main namespace.  Every utility in this library is within this namespace.  All
@@ -46,70 +41,95 @@ namespace SocketUtilities {
 /* socket file descriptors */
 using SocketType = decltype(socket(0,0,0));
 /* generic file descriptors */
-using FileDescriptorType = SocketType;
+using  FileDescriptorType = SocketType;
 
 /*
- * Standard exception class, all exceptions thrown are of this type.
- * Inherits from std::exception.  This is an incomplete type that is defined
- * by the implementation.
+ * Standard exception class, all exceptions thrown are of this type.  Inherits
+ * from std::exception.  This is an incomplete type that is defined by the
+ * implementation.
  */
 class SocketException;
 
 /*
  * Forward declarations of other classes in this library that have public
- * interfaces.  Consult respective header (.hpp) files for documentation on each
- * of these.
+ * interfaces.  Consult respective header (.hpp) files for documentation on
+ * each of these.
  */
 class SocketRAII;
 class KernelEventQueue;
 
 /*
- * Sets the default logging output stream for this class.  Thread safe.
+ * Sets the default logging output stream for this library.  Thread safe.
  * Async unsafe.  Cannot use this function safely from within signal
  * handlers.  As a result of every function making calls to log events, this
  * class should be used with care in an signal handling environment. 
+ *
+ * EXAMPLE :
+ *      ofstream network_log_stream;
+ *      network_log_stream.open("/dev/null");
+ *      assert(network_log_stream);
+ *      set_output_stream(network_log_stream);
  */
-void set_log_stream(std::ostream& log_stream_in);
+void set_output_stream(std::ostream& log_stream_in);
 
 /*
- * Use this to protect data races when printing to the same output stream.  This
- * sockets library uses stdout by default.  To change this call the
- * set_log_stream() function the first thing when main() starts
+ * Use this to protect data races when printing to the same output stream.
+ * This sockets library uses stdout by default.  To change this call the
+ * set_output_stream() function the first thing when main() starts. 
+ *
+ * EXAMPLE :
+ *      while(network_output_guard.exchange(true)) {}
+ *          cout << "Mutually exclused output" << endl;
+ *      network_output_guard.store(false);
  */
-extern std::atomic<bool> network_output_protect;
-
-/*
- * Define this macro to enable logged output to the log stream set by the user. 
- * The default stream for log messages is stdout.  Be careful with using this
- * utility.  Output logging is not async safe and uses an internal spinlock to
- * prevent thread contention with the standard output stream for logging. 
- */
-#ifdef SOCKET_LOG_COMMUNICATION
-    constexpr bool log_events = true;
-#else
-    constexpr bool log_events = false;
-#endif
+extern std::atomic<bool> network_output_guard;
 
 /*
  * Creates a socket on which a server may listen.  The socket is created in
  * a manner that is completely IP version agnostic and so will work with
- * IPv6 as well as IPv4
+ * IPv6 as well as IPv4. 
+ *
+ * create_server_socket() calls getaddrinfo() that returns a linked list of
+ * address structures.  This linked list is then traversed and the socket is
+ * bound to the first address that works.
+ *
+ * Supply the port number you want the socket to serve on as a string to this
+ * function.  The backlog can usually be left as is.
+ *
+ * ERRORS : Throws an exception in exceptional circumstances.
+ * EXAMPLE :
+ *      auto server_socket = SocketUtilities::create_server_socket("8000");
+ *      while (true) {
+ *          auto client_socket = SocketUtilities::accept(server_socket);
+ *          // Do stuff with the client
+ *      }
  */
-SocketType create_server_socket(const char* port, int backlog = 10);
+SocketType create_server_socket(const std::string& port, int backlog = 10);
 
 /*
  * Create a socket though which a client connects to a server on the
  * network. This like the server equivalent of the same function is also IP
  * version agnostic.  
  *
- * getaddrinfo() is called and then the returned lined listis iterated over to
- * find the address values that can be connect()ed to
+ * getaddrinfo() is called and then the returned lined list is iterated over
+ * to find the address values that can be connect()ed to
+ *
+ * ERRORS : Throws an exception in exceptional circumstances.
+ * EXAMPLE:
+ *      auto sock_to_server = 
+ *          SocketUtilities::create_client_socket("localhost", "80");
+ *      SocketUtilities::send_all(sock_to_server, request.data(), 
+ *          request.size());
  */
-SocketType create_client_socket(const char* address, const char* port);
+SocketType create_client_socket(const std::string& address, 
+        const std::string& port);
 
 /*
  * Creates a unix socket on which a server may listen, wait for incoming
  * connections.  The socket is created in the file specified.
+ *
+ * ERRORS : Throws an exception in exceptional conditions
+ * EXAMPLES : Same as create_server_socket()
  */
 SocketType create_server_unix_socket(const std::string& socket_path, 
         int backlog = 10);
@@ -117,6 +137,9 @@ SocketType create_server_unix_socket(const std::string& socket_path,
 /*
  * Creates a client that is connected to another unix socket.  The socket path
  * should be provided to the function
+ *
+ * ERRORS : Throws an exception in exceptional conditions
+ * EXAMPLES : Same as create_server_socket()
  */
 SocketType create_client_unix_socket(const std::string& socket_path);
 
