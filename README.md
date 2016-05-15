@@ -83,7 +83,7 @@ make install
 This will produce an archive called `libcppsockets.a` that you should simply
 move to the folder with the rest of your code.  Linking with this archive will
 link with the objects for this library.  This will also produce symlinks to
-all the header files that you may need.
+all the header files that you may need
 
 **This is not a header only library, so you will have to link with
 `libcppsockets.a`.**
